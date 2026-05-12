@@ -1,4 +1,4 @@
-import { Activity, Bookmark, LineChart } from "lucide-react";
+import { Activity, LineChart, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 type Props = {
@@ -47,9 +47,10 @@ export function StockTableSkeleton({
             <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
               <div className="flex justify-end md:block">
                 {lastColumn === "favourite" ? (
-                  <Bookmark
-                    className="h-4 w-4 text-slate-600 md:hidden"
+                  <Star
+                    className="h-4 w-4 text-amber-500/80 md:hidden"
                     aria-hidden
+                    strokeWidth={2}
                   />
                 ) : (
                   <LineChart

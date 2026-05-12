@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Bookmark } from "lucide-react";
+import { Activity, Star } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -136,9 +136,10 @@ export function StockMarketBrowser({ market }: Props) {
               </th>
               <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
                 <div className="flex justify-end md:block">
-                  <Bookmark
-                    className="h-4 w-4 text-slate-500 md:hidden"
+                  <Star
+                    className="h-4 w-4 text-amber-400/90 md:hidden"
                     aria-hidden
+                    strokeWidth={2}
                   />
                   <span className="sr-only md:hidden">Favourite</span>
                   <span className="hidden md:inline">Favourite</span>

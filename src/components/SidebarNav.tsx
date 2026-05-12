@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  Bookmark,
   ChevronLeft,
   ChevronRight,
   Globe2,
   Home,
   LayoutGrid,
   MapPin,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -52,19 +52,24 @@ function SectionLabel({
   icon: Icon,
   children,
   rail,
+  tone = "muted",
 }: {
   icon: LucideIcon;
   children: ReactNode;
   rail: boolean;
+  /** Amber accent for favourites / saved lists (matches star actions). */
+  tone?: "muted" | "amber";
 }) {
   if (rail) {
     return (
       <div className="mx-2 my-2 h-px bg-slate-800/90" aria-hidden />
     );
   }
+  const iconClass =
+    tone === "amber" ? "text-amber-500/85" : "text-slate-500";
   return (
     <div className="mb-2 mt-1 flex items-center gap-2 px-1">
-      <Icon className="h-3.5 w-3.5 text-slate-500" strokeWidth={2} aria-hidden />
+      <Icon className={`h-3.5 w-3.5 ${iconClass}`} strokeWidth={2} aria-hidden />
       <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
         {children}
       </span>
@@ -234,7 +239,7 @@ export function SidebarNav({
           aria-hidden
         />
 
-        <SectionLabel icon={Bookmark} rail={rail}>
+        <SectionLabel icon={Star} rail={rail} tone="amber">
           Favourites
         </SectionLabel>
         <div
@@ -250,7 +255,7 @@ export function SidebarNav({
             className={navRowClass(is("/dashboard/us"), rail)}
             title="Favourites — United States"
           >
-            <Bookmark
+            <Star
               className={navIconClass(is("/dashboard/us"))}
               aria-hidden
             />
@@ -273,7 +278,7 @@ export function SidebarNav({
             className={navRowClass(is("/dashboard/th"), rail)}
             title="Favourites — Thailand"
           >
-            <Bookmark
+            <Star
               className={navIconClass(is("/dashboard/th"))}
               aria-hidden
             />

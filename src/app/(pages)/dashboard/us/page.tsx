@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { FavouritesEnrichedTable } from "@/components/FavouritesEnrichedTable";
 import { marketOfSymbol } from "@/lib/marketKind";
-import { isMongoConfigured } from "@/lib/mongodb";
 import { getSessionId } from "@/lib/session";
 import { listFavorites } from "@/repositories/favoritesRepository";
 
@@ -15,7 +14,6 @@ export default async function FavouritesUsPage() {
   const sessionId = await getSessionId();
   const symbols = await listFavorites(sessionId);
   const usSyms = symbols.filter((s) => marketOfSymbol(s) === "us");
-  const mongo = isMongoConfigured();
 
   return (
     <div className="space-y-6">
@@ -24,18 +22,7 @@ export default async function FavouritesUsPage() {
           Favourites — United States
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-          US-listed symbols you starred.{" "}
-          {mongo ? (
-            <span className="text-emerald-400/90">Stored in MongoDB.</span>
-          ) : (
-            <span>
-              In-memory — set{" "}
-              <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-xs text-slate-300">
-                MONGODB_URI
-              </code>{" "}
-              to persist.
-            </span>
-          )}
+          US-listed symbols you starred.
         </p>
       </div>
 
