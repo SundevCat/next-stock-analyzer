@@ -29,7 +29,7 @@ export async function GET(
   const timeframe = tfParam as TimeframeId;
   try {
     const trading = toTradingSymbol(symbol);
-    const candles = await fetchYahooCandles(trading, timeframe);
+    const { candles } = await fetchYahooCandles(trading, timeframe);
     const prediction = predictFromCandles(candles);
     return NextResponse.json({
       symbol: toDisplaySymbol(symbol),

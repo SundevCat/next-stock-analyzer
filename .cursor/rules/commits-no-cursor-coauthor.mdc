@@ -1,0 +1,8 @@
+---
+description: Do not add Cursor Co-authored-by trailers when creating commits unless user asks
+alwaysApply: true
+---
+
+# Git commits (this project)
+
+When the user asks for a **`git commit`** (or staged commit, amend, rebase message): do **not** append **`Co-authored-by: Cursor <cursoragent@cursor.com>`** or any similar Cursor/agent co-author trailer unless they **explicitly** request attribution.

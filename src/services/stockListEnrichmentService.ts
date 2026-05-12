@@ -14,7 +14,7 @@ type NormalizedListRow = {
 
 async function enrichOne(row: NormalizedListRow): Promise<StockListItem> {
   try {
-    const candles = await fetchYahooCandles(row.tradingSymbol, "1d");
+    const { candles } = await fetchYahooCandles(row.tradingSymbol, "1d");
     const prediction = predictFromCandles(candles);
     return {
       symbol: row.symbol,

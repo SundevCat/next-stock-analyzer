@@ -28,12 +28,15 @@ export async function GET(
   const timeframe = tfParam as TimeframeId;
   try {
     const trading = toTradingSymbol(symbol);
-    const candles = await fetchYahooCandles(trading, timeframe);
+    const { candles, meta } = await fetchYahooCandles(trading, timeframe);
     return NextResponse.json({
       symbol: toDisplaySymbol(symbol),
       tradingSymbol: trading,
       timeframe,
       candles,
+      companyName: meta.companyName,
+      currency: meta.currency,
+      exchangeName: meta.exchangeName,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Upstream error";

@@ -36,6 +36,7 @@
 6. **Imports**: ใช้ alias `@/` ตาม `tsconfig`
 7. **ขอบเขต diff**: แก้เฉพาะไฟล์ที่จำเป็นต่องาน ไม่ refactor ยกก้อนโดยไม่ขอ
 8. **ตรวจสอบก่อนจบงาน**: หลังแก้โค้ดให้รัน **`npm run lint`** และ **`npm run build`** จนกว่าจะผ่าน — ถือว่างานยังไม่จบถ้า build หรือ lint ล้มเหลว; แก้ error แล้วรันซ้ำจนกว่าจะ success
+9. **Git commits**: เมื่อผู้ใช้ขอให้ commit **ห้าม**ใส่ trailer `Co-authored-by: Cursor <cursoragent@cursor.com>` (หรือ co-author ของ agent แบบเดียวกัน) ยกเว้นผู้ใช้ระบุชัดว่าต้องการให้ใส่
 
 ## คำสั่งที่ใช้บ่อย
 

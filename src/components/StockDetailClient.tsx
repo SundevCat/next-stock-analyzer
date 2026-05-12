@@ -53,12 +53,18 @@ export function StockDetailClient({ symbol }: Props) {
   const [prediction, setPrediction] = useState<PredictionResult | null>(
     null
   );
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<string | null>(null);
+  const [exchangeName, setExchangeName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setCompanyName(null);
+    setCurrency(null);
+    setExchangeName(null);
     const sym = encodeURIComponent(tradingSymbol);
     try {
       const [cRes, pRes] = await Promise.all([
@@ -73,14 +79,25 @@ export function StockDetailClient({ symbol }: Props) {
         const j = (await pRes.json().catch(() => ({}))) as { error?: string };
         throw new Error(j.error ?? `Predict HTTP ${pRes.status}`);
       }
-      const cJson = (await cRes.json()) as { candles: Candle[] };
+      const cJson = (await cRes.json()) as {
+        candles: Candle[];
+        companyName?: string | null;
+        currency?: string | null;
+        exchangeName?: string | null;
+      };
       const pJson = (await pRes.json()) as { prediction: PredictionResult };
       setCandles(cJson.candles);
+      setCompanyName(cJson.companyName ?? null);
+      setCurrency(cJson.currency ?? null);
+      setExchangeName(cJson.exchangeName ?? null);
       setPrediction(pJson.prediction);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
       setCandles([]);
       setPrediction(null);
+      setCompanyName(null);
+      setCurrency(null);
+      setExchangeName(null);
     } finally {
       setLoading(false);
     }
@@ -108,6 +125,33 @@ export function StockDetailClient({ symbol }: Props) {
           <h1 className="text-3xl font-semibold tracking-tight text-white">
             {displaySymbol}
           </h1>
+          {companyName && (
+            <p className="mt-2 max-w-3xl text-base leading-snug text-slate-300">
+              {companyName}
+            </p>
+          )}
+          {(exchangeName || currency || tradingSymbol !== displaySymbol) && (
+            <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
+              {exchangeName && (
+                <div className="flex gap-2">
+                  <dt className="text-slate-600">ตลาด</dt>
+                  <dd className="text-slate-400">{exchangeName}</dd>
+                </div>
+              )}
+              {currency && (
+                <div className="flex gap-2">
+                  <dt className="text-slate-600">สกุลเงิน</dt>
+                  <dd className="font-mono text-slate-400">{currency}</dd>
+                </div>
+              )}
+              {tradingSymbol !== displaySymbol && (
+                <div className="flex gap-2">
+                  <dt className="text-slate-600">รหัสซื้อขาย</dt>
+                  <dd className="font-mono text-slate-400">{tradingSymbol}</dd>
+                </div>
+              )}
+            </dl>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FavoriteButton symbol={tradingSymbol} />

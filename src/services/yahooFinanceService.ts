@@ -17,11 +17,39 @@ type YahooChartResult = {
           close?: Array<number | null>;
         }>;
       };
-      meta?: { currency?: string; symbol?: string };
+      meta?: {
+        currency?: string;
+        symbol?: string;
+        longName?: string;
+        shortName?: string;
+        exchangeName?: string;
+        fullExchangeName?: string;
+      };
     }>;
     error?: { description?: string };
   };
 };
+
+export type YahooChartInstrumentMeta = {
+  companyName: string | null;
+  currency: string | null;
+  exchangeName: string | null;
+};
+
+function chartInstrumentMeta(body: YahooChartResult): YahooChartInstrumentMeta {
+  const meta = body.chart?.result?.[0]?.meta;
+  if (!meta) {
+    return { companyName: null, currency: null, exchangeName: null };
+  }
+  const trim = (v: unknown) =>
+    typeof v === "string" ? v.trim() || null : null;
+  const companyName =
+    trim(meta.longName) ?? trim(meta.shortName) ?? null;
+  const currency = trim(meta.currency);
+  const exchangeName =
+    trim(meta.fullExchangeName) ?? trim(meta.exchangeName) ?? null;
+  return { companyName, currency, exchangeName };
+}
 
 function toCandles(result: NonNullable<YahooChartResult["chart"]>["result"]): Candle[] {
   const first = result?.[0];
@@ -93,7 +121,7 @@ function aggregateTo4h(hourly: Candle[]): Candle[] {
 export async function fetchYahooCandles(
   symbol: string,
   timeframe: TimeframeId
-): Promise<Candle[]> {
+): Promise<{ candles: Candle[]; meta: YahooChartInstrumentMeta }> {
   const sym = toTradingSymbol(symbol);
 
   if (timeframe === "4h") {
@@ -107,7 +135,8 @@ export async function fetchYahooCandles(
     const err = body.chart?.error;
     if (err) throw new Error(err.description ?? "Yahoo chart error");
     const raw = toCandles(body.chart?.result ?? []);
-    return aggregateTo4h(raw);
+    const candles = aggregateTo4h(raw);
+    return { candles, meta: chartInstrumentMeta(body) };
   }
 
   const { interval, range } = yahooChartParams(timeframe);
@@ -127,7 +156,8 @@ export async function fetchYahooCandles(
   const body = (await res.json()) as YahooChartResult;
   const err = body.chart?.error;
   if (err) throw new Error(err.description ?? "Yahoo chart error");
-  return toCandles(body.chart?.result ?? []);
+  const candles = toCandles(body.chart?.result ?? []);
+  return { candles, meta: chartInstrumentMeta(body) };
 }
 
 export async function yahooSearchSymbols(
