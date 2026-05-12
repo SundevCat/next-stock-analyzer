@@ -7,7 +7,11 @@ import { yahooSearchSymbols } from "@/services/yahooFinanceService";
 import { toTradingSymbol } from "@/lib/symbolCodec";
 import type { StockSymbol } from "@/types/stock";
 
-const SEARCH_ENRICH_CAP = 80;
+/** Max merged matches (Yahoo + universe) before paging (safety valve). */
+const SEARCH_MERGE_CAP = 2000;
+
+/** Max rows per page when searching (client may use lower; API caps here). */
+const SEARCH_PAGE_LIMIT_MAX = 60;
 
 function filterByMarket(rows: StockSymbol[], market: MarketId): StockSymbol[] {
   return rows.filter((r) => marketOfSymbol(r.symbol) === market);
@@ -60,16 +64,22 @@ export async function GET(req: NextRequest) {
     );
     if (market) stocks = filterByMarket(stocks, market);
 
+    const fullMatchCount = stocks.length;
+    stocks = stocks.slice(0, SEARCH_MERGE_CAP);
     const totalMatched = stocks.length;
-    const toEnrich = stocks.slice(0, SEARCH_ENRICH_CAP);
-    const enriched = await enrichStockListRows(toEnrich);
+
+    const searchLimit = Math.min(SEARCH_PAGE_LIMIT_MAX, limit);
+    const start = (page - 1) * searchLimit;
+    const pageSlice = stocks.slice(start, start + searchLimit);
+    const enriched = await enrichStockListRows(pageSlice);
+
     return NextResponse.json({
-      page: 1,
-      limit: enriched.length,
+      page,
+      limit: searchLimit,
       totalMatched,
       totalUniverse: all.length,
       stocks: enriched,
-      enrichCapped: totalMatched > enriched.length,
+      enrichCapped: fullMatchCount > SEARCH_MERGE_CAP,
     });
   }
 
