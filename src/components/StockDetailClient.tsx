@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { StockChart } from "@/components/StockChart";
+import { StockDetailSkeleton } from "@/components/StockDetailSkeleton";
 import { TIMEFRAMES } from "@/lib/timeframes";
 import {
   directionSimpleTh,
@@ -12,6 +13,12 @@ import {
   horizonSectionTitleTh,
   summaryHeadlineTh,
 } from "@/lib/predictionLabels";
+import {
+  favoritesDashboardPath,
+  marketOfSymbol,
+  marketsListPath,
+} from "@/lib/marketKind";
+import type { MarketId } from "@/lib/marketKind";
 import { toDisplaySymbol, toTradingSymbol } from "@/lib/symbolCodec";
 import type { Candle, PredictionResult, TimeframeId } from "@/types/stock";
 
@@ -24,6 +31,19 @@ export function StockDetailClient({ symbol }: Props) {
   const displaySymbol = useMemo(() => toDisplaySymbol(symbol), [symbol]);
   const tfParam = searchParams.get("tf") as TimeframeId | null;
   const fromFavorites = searchParams.get("from") === "favorites";
+  const marketParam = searchParams.get("market") as MarketId | null;
+  const inferredMarket = useMemo(
+    () => marketOfSymbol(tradingSymbol),
+    [tradingSymbol]
+  );
+  const effectiveMarket: MarketId =
+    marketParam === "us" || marketParam === "th"
+      ? marketParam
+      : inferredMarket;
+
+  const listHref = fromFavorites
+    ? favoritesDashboardPath(effectiveMarket)
+    : marketsListPath(effectiveMarket);
   const timeframe: TimeframeId = useMemo(() => {
     if (tfParam && TIMEFRAMES.some((t) => t.id === tfParam)) return tfParam;
     return "1d";
@@ -92,7 +112,7 @@ export function StockDetailClient({ symbol }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           <FavoriteButton symbol={tradingSymbol} />
           <Link
-            href={fromFavorites ? "/dashboard" : "/stocks"}
+            href={listHref}
             className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:border-slate-500"
           >
             {fromFavorites ? "Back to favourites" : "Back to list"}
@@ -124,9 +144,7 @@ export function StockDetailClient({ symbol }: Props) {
       )}
 
       {loading ? (
-        <div className="rounded-xl border border-slate-800 py-20 text-center text-slate-500">
-          Loading chart…
-        </div>
+        <StockDetailSkeleton label="Loading chart and signal analysis" />
       ) : candles.length === 0 ? (
         <div className="rounded-xl border border-slate-800 py-20 text-center text-slate-500">
           No candle data for this timeframe.

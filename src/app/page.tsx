@@ -19,16 +19,28 @@ export default function HomePage() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            href="/stocks"
+            href="/stocks/us"
             className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 shadow hover:bg-emerald-400"
           >
-            Browse markets
+            US markets
           </Link>
           <Link
-            href="/dashboard"
+            href="/stocks/th"
+            className="rounded-lg bg-emerald-600/90 px-4 py-2 text-sm font-medium text-white shadow hover:bg-emerald-500"
+          >
+            Thailand markets
+          </Link>
+          <Link
+            href="/dashboard/us"
             className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
           >
-            Open favourites
+            Favourites US
+          </Link>
+          <Link
+            href="/dashboard/th"
+            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+          >
+            Favourites Thailand
           </Link>
         </div>
       </section>

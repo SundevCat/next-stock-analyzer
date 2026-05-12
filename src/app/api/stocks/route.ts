@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllSecSymbols } from "@/services/secSymbolsService";
+import type { MarketId } from "@/lib/marketKind";
+import { marketOfSymbol } from "@/lib/marketKind";
+import { getAllMarketSymbols } from "@/services/marketUniverseService";
 import { enrichStockListRows } from "@/services/stockListEnrichmentService";
 import { yahooSearchSymbols } from "@/services/yahooFinanceService";
 import { toTradingSymbol } from "@/lib/symbolCodec";
 import type { StockSymbol } from "@/types/stock";
 
 const SEARCH_ENRICH_CAP = 80;
+
+function filterByMarket(rows: StockSymbol[], market: MarketId): StockSymbol[] {
+  return rows.filter((r) => marketOfSymbol(r.symbol) === market);
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -16,11 +22,16 @@ export async function GET(req: NextRequest) {
     Math.max(10, parseInt(searchParams.get("limit") ?? "60", 10) || 60)
   );
 
-  const all = await getAllSecSymbols();
+  const mp = searchParams.get("market");
+  const market: MarketId | undefined =
+    mp === "us" || mp === "th" ? mp : undefined;
+
+  const full = await getAllMarketSymbols();
+  const all = market ? filterByMarket(full, market) : full;
 
   if (q.length) {
     const ql = q.toLowerCase();
-    const fromSec = all.filter(
+    const fromUniverse = all.filter(
       (s) =>
         s.symbol.toLowerCase().includes(ql) ||
         s.name.toLowerCase().includes(ql)
@@ -36,16 +47,19 @@ export async function GET(req: NextRequest) {
     const map = new Map<string, StockSymbol>();
     for (const s of fromYahoo) {
       const t = toTradingSymbol(s.symbol);
+      if (market && marketOfSymbol(t) !== market) continue;
       map.set(t, { symbol: t, name: s.name });
     }
-    for (const s of fromSec) {
+    for (const s of fromUniverse) {
       const t = toTradingSymbol(s.symbol);
       map.set(t, { symbol: t, name: s.name });
     }
 
-    const stocks = [...map.values()].sort((a, b) =>
+    let stocks: StockSymbol[] = [...map.values()].sort((a, b) =>
       a.symbol.localeCompare(b.symbol)
     );
+    if (market) stocks = filterByMarket(stocks, market);
+
     const totalMatched = stocks.length;
     const toEnrich = stocks.slice(0, SEARCH_ENRICH_CAP);
     const enriched = await enrichStockListRows(toEnrich);

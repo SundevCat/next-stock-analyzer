@@ -10,7 +10,7 @@
 
 - **Framework**: Next.js 15 (App Router), React 19, TypeScript
 - **UI**: Tailwind CSS, `lightweight-charts` สำหรับกราฟ
-- **Data**: Yahoo Finance chart/search (HTTP), SEC `company_tickers.json` (ลิสต์หลัก)
+- **Data**: Yahoo Finance chart/search (HTTP), SEC `company_tickers.json`; Thailand **SET+mai** symbols loaded from SET’s published `listedCompanies_en_US.xls` (see `thSetSymbolsService.ts`), mapped to `*.BK` for Yahoo; static `thSecurities.ts` is fallback if the file can’t be fetched.
 - **Optional DB**: MongoDB สำหรับ favourites (`MONGODB_URI` ใน `.env`) — ไม่มี URI จะ fallback แบบ in-memory ต่อ instance
 - **Validation**: Zod (ถ้ามีใน route)
 
@@ -20,7 +20,7 @@
 |--------|---------|
 | หน้า | `src/app/(pages)/` — `stocks`, `stocks/[symbol]`, `dashboard`, `page.tsx` |
 | API | `src/app/api/stocks/route.ts`, `.../stocks/[symbol]/candles`, `.../predict`, `.../favorites` |
-| บริการ | `src/services/yahooFinanceService.ts`, `secSymbolsService.ts`, `predictionService.ts` |
+| บริการ | `yahooFinanceService.ts`, `secSymbolsService.ts`, `marketUniverseService.ts`, `predictionService.ts` |
 | Components | `src/components/` — `StockMarketBrowser`, `StockChart`, `StockDetailClient`, `FavoriteButton`, `AppShell` |
 | Session | `src/middleware.ts` (ตั้ง cookie session), `src/lib/session.ts`, `sessionConstants.ts` |
 | Favourites | `src/repositories/favoritesRepository.ts` |
@@ -32,15 +32,24 @@
 2. **แหล่งความจริงของ prediction**: ใช้ `predictFromCandles` จาก `predictionService.ts` เท่านั้นเมื่อต้องการ logic เดียวกับหน้า detail — ห้ามคัดลอกสูตรไปผูก UI โดยแยก logic
 3. **สัญลักษณ์หุ้น**: Route param และ Yahoo อาจมี `^` หรือรูปแบบ URL-encoded; การแสดงผล/API ควรผ่านฟังก์ชัน sanitize/decode กลาง (ถ้ามีใน `src/lib/`) ก่อน render และก่อนส่ง JSON
 4. **Caching**: `getAllSecSymbols` ใช้ `unstable_cache`; Yahoo fetch ใช้ `next: { revalidate: ... }` — พิจารณา TTL เมื่อเพิ่ม endpoint ใหม่
-5. **Imports**: ใช้ alias `@/` ตาม `tsconfig`
-6. **ขอบเขต diff**: แก้เฉพาะไฟล์ที่จำเป็นต่องาน ไม่ refactor ยกก้อนโดยไม่ขอ
+5. **Universe รายการหุ้น**: ลิสต์หลักรวม US (SEC) + ไทย (`getAllMarketSymbols`); การค้นหายังดึง Yahoo search ได้
+6. **Imports**: ใช้ alias `@/` ตาม `tsconfig`
+7. **ขอบเขต diff**: แก้เฉพาะไฟล์ที่จำเป็นต่องาน ไม่ refactor ยกก้อนโดยไม่ขอ
+8. **ตรวจสอบก่อนจบงาน**: หลังแก้โค้ดให้รัน **`npm run lint`** และ **`npm run build`** จนกว่าจะผ่าน — ถือว่างานยังไม่จบถ้า build หรือ lint ล้มเหลว; แก้ error แล้วรันซ้ำจนกว่าจะ success
 
 ## คำสั่งที่ใช้บ่อย
 
+หลัก:**ทุกครั้งที่แก้โปรเจกต์แล้ว** (โดยเฉพาะก่อนสรุปงาน / PR) รันตามลำดับ:
+
 ```bash
-npm run dev    # Turbopack
 npm run lint
 npm run build
+```
+
+รายการอื่นที่ใช้ระหว่างพัฒนา:
+
+```bash
+npm run dev    # Turbopack
 ```
 
 ## Environment

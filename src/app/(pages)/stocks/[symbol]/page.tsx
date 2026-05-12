@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { StockDetailClient } from "@/components/StockDetailClient";
+import { StockDetailSkeleton } from "@/components/StockDetailSkeleton";
 import { toDisplaySymbol } from "@/lib/symbolCodec";
 
 export async function generateMetadata({
@@ -20,11 +21,7 @@ export default async function StockDetailPage({
 }) {
   const { symbol } = await params;
   return (
-    <Suspense
-      fallback={
-        <div className="py-20 text-center text-slate-500">Loading chart…</div>
-      }
-    >
+    <Suspense fallback={<StockDetailSkeleton />}>
       <StockDetailClient symbol={symbol} />
     </Suspense>
   );

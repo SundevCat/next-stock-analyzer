@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import type { MarketId } from "@/lib/marketKind";
+import { StockTableSkeleton } from "@/components/StockTableSkeleton";
 import { SuggestionBadge } from "@/components/SuggestionBadge";
 import type { StockListItem } from "@/types/stock";
 
@@ -26,7 +28,9 @@ function TrashIcon({ className }: { className?: string }) {
   );
 }
 
-export function FavouritesEnrichedTable() {
+type Props = { market: MarketId };
+
+export function FavouritesEnrichedTable({ market }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState<StockListItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +42,12 @@ export function FavouritesEnrichedTable() {
     setError(null);
     void (async () => {
       try {
-        const res = await fetch("/api/favorites/enriched", {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `/api/favorites/enriched?market=${encodeURIComponent(market)}`,
+          {
+            credentials: "include",
+          }
+        );
         const json = (await res.json().catch(() => ({}))) as {
           stocks?: StockListItem[];
           error?: string;
@@ -59,7 +66,7 @@ export function FavouritesEnrichedTable() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [market]);
 
   useEffect(() => {
     if (rows !== null && rows.length === 0) setEditMode(false);
@@ -108,31 +115,11 @@ export function FavouritesEnrichedTable() {
 
   if (rows === null) {
     return (
-      <div className="overflow-x-auto rounded-xl border border-slate-800">
-        <table className="w-full min-w-[36rem] text-left text-sm">
-          <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3 font-medium">Symbol</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">
-                Suggestion
-              </th>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium text-right">Price</th>
-              <th className="px-4 py-3 font-medium text-right">Chart</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td
-                colSpan={5}
-                className="px-4 py-12 text-center text-slate-500"
-              >
-                Loading prices and suggestions…
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <StockTableSkeleton
+        lastColumn="chart"
+        rows={10}
+        label="Loading favourites, prices and suggestions"
+      />
     );
   }
 
@@ -191,7 +178,7 @@ export function FavouritesEnrichedTable() {
                 >
                   <td className="px-4 py-2 font-mono">
                     <Link
-                      href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?from=favorites`}
+                      href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?from=favorites&market=${market}`}
                       className="text-emerald-300 hover:underline"
                     >
                       {s.symbol}
@@ -208,7 +195,7 @@ export function FavouritesEnrichedTable() {
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link
-                      href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?from=favorites`}
+                      href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?from=favorites&market=${market}`}
                       className="text-sm text-slate-500 hover:text-slate-300"
                     >
                       View →

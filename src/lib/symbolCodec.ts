@@ -38,9 +38,13 @@ export function toTradingSymbol(raw: string): string {
 
 /**
  * Human-readable ticker for UI and public JSON `symbol` fields.
- * Example: ^SPX → SPX, %5ESPX after decode → SPX.
+ * Examples: ^SPX → SPX; PTT.BK (Yahoo SET) → PTT.
  */
 export function toDisplaySymbol(raw: string): string {
   const t = toTradingSymbol(raw);
-  return t.startsWith("^") ? t.slice(1) : t;
+  let display = t.startsWith("^") ? t.slice(1) : t;
+  if (display.endsWith(".BK")) {
+    display = display.slice(0, -3);
+  }
+  return display;
 }

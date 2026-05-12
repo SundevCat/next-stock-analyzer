@@ -1,36 +1,28 @@
-import Link from "next/link";
-
-const nav = [
-  { href: "/stocks", label: "Markets" },
-  { href: "/dashboard", label: "Favourites" },
-];
-
+import { SidebarNav } from "@/components/SidebarNav";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" className="text-lg font-semibold tracking-tight">
-            Stock Analyst
-          </Link>
-          <nav className="flex items-center gap-4 text-sm text-slate-300">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-md px-2 py-1 transition hover:bg-slate-800 hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-emerald-600 focus:px-3 focus:py-2 focus:text-white"
+      >
+        Skip to content
+      </a>
+      <div className="flex flex-1 flex-col lg:flex-row">
+        <SidebarNav />
+        <div
+          id="main-content"
+          className="flex min-w-0 flex-1 flex-col"
+          tabIndex={-1}
+        >
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+            {children}
+          </main>
         </div>
-      </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        {children}
-      </main>
+      </div>
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-        Educational demo — not investment advice. Data from Yahoo Finance &amp; SEC.
+        Educational demo — not investment advice. Data from Yahoo Finance &amp;
+        SEC.
       </footer>
     </div>
   );

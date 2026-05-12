@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { StockTableSkeleton } from "@/components/StockTableSkeleton";
 import { SuggestionBadge } from "@/components/SuggestionBadge";
+import type { MarketId } from "@/lib/marketKind";
 import type { StockListItem } from "@/types/stock";
 
 type ListPayload = {
@@ -15,7 +17,9 @@ type ListPayload = {
   enrichCapped?: boolean;
 };
 
-export function StockMarketBrowser() {
+type Props = { market: MarketId };
+
+export function StockMarketBrowser({ market }: Props) {
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [page, setPage] = useState(1);
@@ -43,6 +47,7 @@ export function StockMarketBrowser() {
       params.set("page", String(page));
       params.set("limit", "60");
     }
+    params.set("market", market);
     const res = await fetch(`/api/stocks?${params.toString()}`);
     const data = (await res.json()) as ListPayload;
     setRows(data.stocks);
@@ -51,8 +56,7 @@ export function StockMarketBrowser() {
     setEnrichCapped(Boolean(data.enrichCapped));
     if (data.limit) setLimit(data.limit);
     setLoading(false);
-  }, [debounced, page]);
-
+  }, [debounced, page, market]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -69,17 +73,27 @@ export function StockMarketBrowser() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. AAPL or Apple"
+            placeholder={
+              market === "th"
+                ? "e.g. PTT.BK or Thai stock name"
+                : "e.g. AAPL or Apple"
+            }
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-emerald-500/0 transition focus:ring-2 focus:ring-emerald-500/40"
           />
         </div>
         {!debounced && total != null && (
           <p className="text-sm text-slate-400">
-            SEC universe:{" "}
+            Listed in app:{" "}
             <span className="font-mono text-slate-200">
               {total.toLocaleString()}
             </span>{" "}
-            issues
+            <span className="text-slate-500">
+              (
+              {market === "th"
+                ? "Thailand SET / Yahoo .BK"
+                : "United States SEC universe"}
+              )
+            </span>
           </p>
         )}
       </div>
@@ -91,6 +105,13 @@ export function StockMarketBrowser() {
         </p>
       )}
 
+      {loading ? (
+        <StockTableSkeleton
+          lastColumn="favourite"
+          rows={10}
+          label="Loading symbols and quotes"
+        />
+      ) : (
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full min-w-[36rem] text-left text-sm">
           <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
@@ -105,16 +126,7 @@ export function StockMarketBrowser() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {loading ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-10 text-center text-slate-500"
-                >
-                  Loading…
-                </td>
-              </tr>
-            ) : rows.length === 0 ? (
+            {rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -131,7 +143,7 @@ export function StockMarketBrowser() {
                 >
                   <td className="px-4 py-2 font-mono">
                     <Link
-                      href={`/stocks/${encodeURIComponent(s.tradingSymbol)}`}
+                      href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?market=${market}`}
                       className="text-emerald-300 hover:underline"
                     >
                       {s.symbol}
@@ -159,6 +171,7 @@ export function StockMarketBrowser() {
           </tbody>
         </table>
       </div>
+      )}
 
       {!debounced && total != null && (
         <div className="flex items-center justify-between text-sm text-slate-400">
