@@ -88,7 +88,7 @@ export function StockMarketBrowser({ market }: Props) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               market === "th"
-                ? "e.g. PTT.BK or Thai stock name"
+                ? "e.g. PTT or Thai stock name"
                 : "e.g. AAPL or Apple"
             }
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-emerald-500/0 transition focus:ring-2 focus:ring-emerald-500/40"
