@@ -1,3 +1,4 @@
+import { Activity, Bookmark, LineChart } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 type Props = {
@@ -23,35 +24,62 @@ export function StockTableSkeleton({
       aria-live="polite"
     >
       <span className="sr-only">{label}</span>
-      <table className="w-full min-w-[36rem] text-left text-sm">
-        <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+      <table className="w-full min-w-0 text-left text-xs md:min-w-[36rem] md:text-sm">
+        <thead className="bg-slate-900/80 text-[10px] uppercase tracking-wide text-slate-500 md:text-xs">
           <tr>
-            <th className="px-4 py-3 font-medium">Symbol</th>
-            <th className="whitespace-nowrap px-4 py-3 font-medium">
-              Suggestion
+            <th className="px-2 py-2 font-medium md:px-4 md:py-3">
+              Symbol
             </th>
-            <th className="px-4 py-3 font-medium">Name</th>
-            <th className="px-4 py-3 font-medium text-right">Price</th>
-            <th className="px-4 py-3 font-medium text-right">{lastHeading}</th>
+            <th className="w-12 px-1 py-2 text-center font-medium md:w-auto md:px-4 md:text-left">
+              <Activity
+                className="mx-auto h-4 w-4 text-slate-600 md:hidden"
+                aria-hidden
+              />
+              <span className="sr-only md:hidden">Suggestion</span>
+              <span className="hidden md:inline">Suggestion</span>
+            </th>
+            <th className="hidden font-medium md:table-cell md:px-4 md:py-3">
+              Name
+            </th>
+            <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
+              Price
+            </th>
+            <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
+              <div className="flex justify-end md:block">
+                {lastColumn === "favourite" ? (
+                  <Bookmark
+                    className="h-4 w-4 text-slate-600 md:hidden"
+                    aria-hidden
+                  />
+                ) : (
+                  <LineChart
+                    className="h-4 w-4 text-slate-600 md:hidden"
+                    aria-hidden
+                  />
+                )}
+                <span className="sr-only md:hidden">{lastHeading}</span>
+                <span className="hidden md:inline">{lastHeading}</span>
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800">
           {Array.from({ length: rows }, (_, i) => (
             <tr key={i} className="bg-slate-950/40">
-              <td className="px-4 py-3">
-                <Skeleton className="h-4 w-16" />
+              <td className="px-2 py-2.5 md:px-4 md:py-3">
+                <Skeleton className="h-3.5 w-14 md:h-4 md:w-16" />
               </td>
-              <td className="whitespace-nowrap px-4 py-3">
-                <Skeleton className="h-6 w-[4.5rem] rounded-full" />
+              <td className="px-1 py-2.5 text-center md:px-4 md:py-3">
+                <Skeleton className="mx-auto size-8 rounded-full md:h-6 md:w-[4.5rem] md:rounded-full" />
               </td>
-              <td className="max-w-xs px-4 py-3 sm:max-w-md">
+              <td className="hidden px-4 py-2.5 md:table-cell md:py-3">
                 <Skeleton className="h-4 w-[min(100%,14rem)]" />
               </td>
-              <td className="px-4 py-3 text-right">
-                <Skeleton className="ml-auto h-4 w-14" />
+              <td className="px-2 py-2.5 text-right md:px-4 md:py-3">
+                <Skeleton className="ml-auto h-3 w-12 md:h-4 md:w-14" />
               </td>
-              <td className="px-4 py-3 text-right">
-                <Skeleton className="ml-auto h-7 w-20 rounded-lg" />
+              <td className="px-2 py-2.5 text-right md:px-4 md:py-3">
+                <Skeleton className="ml-auto h-8 w-10 rounded-lg md:h-7 md:w-20" />
               </td>
             </tr>
           ))}

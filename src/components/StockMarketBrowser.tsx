@@ -1,5 +1,6 @@
 "use client";
 
+import { Activity, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -113,16 +114,36 @@ export function StockMarketBrowser({ market }: Props) {
         />
       ) : (
       <div className="overflow-x-auto rounded-xl border border-slate-800">
-        <table className="w-full min-w-[36rem] text-left text-sm">
-          <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+        <table className="w-full min-w-0 text-left text-xs md:min-w-[36rem] md:text-sm">
+          <thead className="bg-slate-900/80 text-[10px] uppercase tracking-wide text-slate-500 md:text-xs">
             <tr>
-              <th className="px-4 py-3 font-medium">Symbol</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">
-                Suggestion
+              <th className="px-2 py-2 font-medium md:px-4 md:py-3">
+                Symbol
               </th>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium text-right">Price</th>
-              <th className="px-4 py-3 font-medium text-right">Favourite</th>
+              <th className="w-12 px-1 py-2 text-center font-medium md:w-auto md:px-4 md:text-left">
+                <Activity
+                  className="mx-auto h-4 w-4 text-slate-500 md:hidden"
+                  aria-hidden
+                />
+                <span className="sr-only md:hidden">Suggestion</span>
+                <span className="hidden md:inline">Suggestion</span>
+              </th>
+              <th className="hidden font-medium md:table-cell md:px-4 md:py-3">
+                Name
+              </th>
+              <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
+                Price
+              </th>
+              <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
+                <div className="flex justify-end md:block">
+                  <Bookmark
+                    className="h-4 w-4 text-slate-500 md:hidden"
+                    aria-hidden
+                  />
+                  <span className="sr-only md:hidden">Favourite</span>
+                  <span className="hidden md:inline">Favourite</span>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
@@ -141,7 +162,7 @@ export function StockMarketBrowser({ market }: Props) {
                   key={s.tradingSymbol}
                   className="bg-slate-950/40 hover:bg-slate-900/60"
                 >
-                  <td className="px-4 py-2 font-mono">
+                  <td className="px-2 py-2.5 font-mono text-xs md:px-4 md:py-2 md:text-sm">
                     <Link
                       href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?market=${market}`}
                       className="text-emerald-300 hover:underline"
@@ -149,20 +170,28 @@ export function StockMarketBrowser({ market }: Props) {
                       {s.symbol}
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-2">
-                    <SuggestionBadge suggestion={s.suggestion} />
+                  <td className="px-1 py-2 text-center align-middle md:whitespace-nowrap md:px-4 md:text-left">
+                    <span className="inline-flex md:hidden">
+                      <SuggestionBadge
+                        variant="icon"
+                        suggestion={s.suggestion}
+                      />
+                    </span>
+                    <span className="hidden md:inline-block">
+                      <SuggestionBadge suggestion={s.suggestion} />
+                    </span>
                   </td>
-                  <td className="max-w-xs truncate px-4 py-2 text-slate-300 sm:max-w-md">
+                  <td className="hidden max-w-xs truncate px-4 py-2 text-slate-300 md:table-cell sm:max-w-md">
                     {s.name}
                   </td>
-                  <td className="px-4 py-2 text-right font-mono text-slate-200">
+                  <td className="px-2 py-2.5 text-right font-mono text-[11px] text-slate-200 tabular-nums md:px-4 md:py-2 md:text-sm">
                     {s.price != null ? s.price.toFixed(2) : "—"}
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-2 py-2 text-right align-middle md:px-4 md:py-2">
                     <FavoriteButton
                       symbol={s.tradingSymbol}
                       compact
-                      className="inline-flex rounded-lg border border-slate-600 px-2 py-1 text-xs font-medium text-slate-200 transition hover:border-amber-400/60 hover:text-amber-200 disabled:opacity-50"
+                      className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-600 px-2 py-1 text-xs font-medium text-slate-200 transition hover:border-amber-400/60 hover:text-amber-200 disabled:opacity-50 md:min-h-0 md:min-w-0"
                     />
                   </td>
                 </tr>

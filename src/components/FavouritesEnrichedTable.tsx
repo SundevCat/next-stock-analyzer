@@ -1,5 +1,6 @@
 "use client";
 
+import { Activity, LineChart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -142,19 +143,39 @@ export function FavouritesEnrichedTable({ market }: Props) {
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table
-          className={`w-full text-left text-sm ${showDelete ? "min-w-[42rem]" : "min-w-[36rem]"}`}
+          className={`w-full min-w-0 text-left text-xs md:text-sm ${showDelete ? "md:min-w-[42rem]" : "md:min-w-[36rem]"}`}
         >
-          <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-slate-900/80 text-[10px] uppercase tracking-wide text-slate-500 md:text-xs">
             <tr>
-              <th className="px-4 py-3 font-medium">Symbol</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">
-                Suggestion
+              <th className="px-2 py-2 font-medium md:px-4 md:py-3">
+                Symbol
               </th>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium text-right">Price</th>
-              <th className="px-4 py-3 font-medium text-right">Chart</th>
+              <th className="w-12 px-1 py-2 text-center font-medium md:w-auto md:px-4 md:text-left">
+                <Activity
+                  className="mx-auto h-4 w-4 text-slate-500 md:hidden"
+                  aria-hidden
+                />
+                <span className="sr-only md:hidden">Suggestion</span>
+                <span className="hidden md:inline">Suggestion</span>
+              </th>
+              <th className="hidden font-medium md:table-cell md:px-4 md:py-3">
+                Name
+              </th>
+              <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
+                Price
+              </th>
+              <th className="px-2 py-2 text-right font-medium md:px-4 md:py-3">
+                <div className="flex justify-end md:block">
+                  <LineChart
+                    className="h-4 w-4 text-slate-500 md:hidden"
+                    aria-hidden
+                  />
+                  <span className="sr-only md:hidden">Chart</span>
+                  <span className="hidden md:inline">Chart</span>
+                </div>
+              </th>
               {showDelete ? (
-                <th className="w-11 px-1 py-3 text-right font-medium">
+                <th className="w-12 px-1 py-2 text-right font-medium md:w-11 md:px-1 md:py-3">
                   <span className="sr-only">ลบออกจากโปรด</span>
                 </th>
               ) : null}
@@ -176,7 +197,7 @@ export function FavouritesEnrichedTable({ market }: Props) {
                   key={s.tradingSymbol}
                   className="bg-slate-950/40 hover:bg-slate-900/60"
                 >
-                  <td className="px-4 py-2 font-mono">
+                  <td className="px-2 py-2.5 font-mono text-xs md:px-4 md:py-2 md:text-sm">
                     <Link
                       href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?from=favorites&market=${market}`}
                       className="text-emerald-300 hover:underline"
@@ -184,39 +205,54 @@ export function FavouritesEnrichedTable({ market }: Props) {
                       {s.symbol}
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-2">
-                    <SuggestionBadge suggestion={s.suggestion} />
+                  <td className="px-1 py-2 text-center align-middle md:whitespace-nowrap md:px-4 md:text-left">
+                    <span className="inline-flex md:hidden">
+                      <SuggestionBadge
+                        variant="icon"
+                        suggestion={s.suggestion}
+                      />
+                    </span>
+                    <span className="hidden md:inline-block">
+                      <SuggestionBadge suggestion={s.suggestion} />
+                    </span>
                   </td>
-                  <td className="max-w-xs truncate px-4 py-2 text-slate-300 sm:max-w-md">
+                  <td className="hidden max-w-xs truncate px-4 py-2 text-slate-300 md:table-cell sm:max-w-md">
                     {s.name}
                   </td>
-                  <td className="px-4 py-2 text-right font-mono text-slate-200">
+                  <td className="px-2 py-2.5 text-right font-mono text-[11px] text-slate-200 tabular-nums md:px-4 md:py-2 md:text-sm">
                     {s.price != null ? s.price.toFixed(2) : "—"}
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-2 py-2 text-right align-middle md:px-4 md:py-2">
                     <Link
                       href={`/stocks/${encodeURIComponent(s.tradingSymbol)}?from=favorites&market=${market}`}
-                      className="text-sm text-slate-500 hover:text-slate-300"
+                      className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-900/80 hover:text-slate-300 md:min-h-0 md:min-w-0 md:text-sm md:text-slate-500"
+                      aria-label={`Open chart for ${s.symbol}`}
+                      title="View chart"
                     >
-                      View →
+                      <LineChart
+                        className="h-5 w-5 md:hidden"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      <span className="hidden md:inline">View →</span>
                     </Link>
                   </td>
                   {showDelete ? (
-                    <td className="px-1 py-2 text-right align-middle">
+                    <td className="px-1 py-2 text-right align-middle md:px-1">
                       <button
                         type="button"
                         disabled={removing === s.tradingSymbol}
                         title="ลบออกจากรายการโปรด"
                         aria-label={`ลบ ${s.symbol} ออกจากรายการโปรด`}
                         onClick={() => confirmAndRemove(s)}
-                        className="inline-flex items-center justify-center rounded-md border border-red-900/50 p-1 text-red-300 transition hover:border-red-500/60 hover:bg-red-950/40 disabled:opacity-50"
+                        className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-red-900/50 p-2 text-red-300 transition hover:border-red-500/60 hover:bg-red-950/40 disabled:opacity-50 md:min-h-0 md:min-w-0 md:p-1"
                       >
                         {removing === s.tradingSymbol ? (
                           <span className="px-0.5 text-[10px] leading-none">
                             …
                           </span>
                         ) : (
-                          <TrashIcon className="h-3 w-3" />
+                          <TrashIcon className="h-4 w-4 md:h-3 md:w-3" />
                         )}
                       </button>
                     </td>
