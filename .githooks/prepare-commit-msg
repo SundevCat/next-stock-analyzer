@@ -1,0 +1,9 @@
+#!/bin/sh
+# Cursor Agent may append this trailer even when the requested message does not include it.
+# Strips the default Cursor co-author line (with or without CRLF) from the final message.
+COMMIT_MSG_FILE=$1
+[ -n "$COMMIT_MSG_FILE" ] && [ -f "$COMMIT_MSG_FILE" ] || exit 0
+tmp="${COMMIT_MSG_FILE}.strip-cursor-coauthor.$$"
+tr -d '\015' <"$COMMIT_MSG_FILE" | grep -v '^Co-authored-by: Cursor <cursoragent@cursor.com>$' >"$tmp" \
+  && mv -f "$tmp" "$COMMIT_MSG_FILE"
+exit 0

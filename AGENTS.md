@@ -57,6 +57,18 @@ npm run dev    # Turbopack
 
 คัดลอกจาก `.env.example`: `MONGODB_URI` เป็นทางเลือก
 
+## Git: ลบ `Co-authored-by` ของ Cursor
+
+Cursor อาจแทรกบรรทัด `Co-authored-by: Cursor <cursoragent@cursor.com>` ตอน Agent รัน commit — **ไม่ใช่**สิ่งที่กฎใน repo ควบคุมได้
+
+ถ้าต้องการให้ Git ลบบรรทัดนั้นอัตโนมัติใน repo นี้ รันครั้งเดียวที่ root ของโปรเจกต์:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+จากนั้น hook ใน `.githooks/prepare-commit-msg` จะตัด trailer ดังกล่าวก่อน commit เสร็จ (ใช้ได้กับ Git for Windows / Bash)
+
 ## เมื่อเพิ่มฟีเจอร์ใหม่
 
 - รายการหุ้น: ดู `StockMarketBrowser` + `GET /api/stocks`
