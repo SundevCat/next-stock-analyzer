@@ -28,7 +28,7 @@ export default function HomePage() {
             href="/dashboard"
             className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
           >
-            Open dashboard
+            Open favourites
           </Link>
         </div>
       </section>

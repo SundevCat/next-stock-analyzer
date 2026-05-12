@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { SuggestionBadge } from "@/components/SuggestionBadge";
 import type { StockListItem } from "@/types/stock";
 
 type ListPayload = {
@@ -13,18 +14,6 @@ type ListPayload = {
   totalMatched?: number;
   enrichCapped?: boolean;
 };
-
-function suggestionLabel(s: StockListItem["suggestion"]) {
-  if (s === "buy") return "Buy";
-  if (s === "sell") return "Sell";
-  return "Neutral";
-}
-
-function suggestionClass(s: StockListItem["suggestion"]) {
-  if (s === "buy") return "text-emerald-300 bg-emerald-500/15";
-  if (s === "sell") return "text-red-300 bg-red-500/15";
-  return "text-slate-400 bg-slate-700/40";
-}
 
 export function StockMarketBrowser() {
   const [query, setQuery] = useState("");
@@ -102,14 +91,16 @@ export function StockMarketBrowser() {
         </p>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-800">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto rounded-xl border border-slate-800">
+        <table className="w-full min-w-[36rem] text-left text-sm">
           <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3 font-medium">Symbol</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium">
+                Suggestion
+              </th>
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium text-right">Price</th>
-              <th className="px-4 py-3 font-medium">Suggestion</th>
               <th className="px-4 py-3 font-medium text-right">Favourite</th>
             </tr>
           </thead>
@@ -146,18 +137,14 @@ export function StockMarketBrowser() {
                       {s.symbol}
                     </Link>
                   </td>
+                  <td className="whitespace-nowrap px-4 py-2">
+                    <SuggestionBadge suggestion={s.suggestion} />
+                  </td>
                   <td className="max-w-xs truncate px-4 py-2 text-slate-300 sm:max-w-md">
                     {s.name}
                   </td>
                   <td className="px-4 py-2 text-right font-mono text-slate-200">
                     {s.price != null ? s.price.toFixed(2) : "—"}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold capitalize ${suggestionClass(s.suggestion)}`}
-                    >
-                      {suggestionLabel(s.suggestion)}
-                    </span>
                   </td>
                   <td className="px-4 py-2 text-right">
                     <FavoriteButton

@@ -23,6 +23,7 @@ export function StockDetailClient({ symbol }: Props) {
   const tradingSymbol = useMemo(() => toTradingSymbol(symbol), [symbol]);
   const displaySymbol = useMemo(() => toDisplaySymbol(symbol), [symbol]);
   const tfParam = searchParams.get("tf") as TimeframeId | null;
+  const fromFavorites = searchParams.get("from") === "favorites";
   const timeframe: TimeframeId = useMemo(() => {
     if (tfParam && TIMEFRAMES.some((t) => t.id === tfParam)) return tfParam;
     return "1d";
@@ -91,10 +92,10 @@ export function StockDetailClient({ symbol }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           <FavoriteButton symbol={tradingSymbol} />
           <Link
-            href="/stocks"
+            href={fromFavorites ? "/dashboard" : "/stocks"}
             className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:border-slate-500"
           >
-            Back to list
+            {fromFavorites ? "Back to favourites" : "Back to list"}
           </Link>
         </div>
       </div>

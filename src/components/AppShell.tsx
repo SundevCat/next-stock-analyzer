@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const nav = [
   { href: "/stocks", label: "Markets" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard", label: "Favourites" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

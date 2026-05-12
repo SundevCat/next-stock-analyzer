@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useFavorites } from "@/components/FavoritesProvider";
 import { toTradingSymbol } from "@/lib/symbolCodec";
 
 type Props = {
@@ -10,22 +10,11 @@ type Props = {
 };
 
 export function FavoriteButton({ symbol, className, compact }: Props) {
-  const [favorites, setFavorites] = useState<string[] | null>(null);
+  const { symbols, replaceSymbols } = useFavorites();
   const key = toTradingSymbol(symbol);
 
-  const refresh = useCallback(async () => {
-    const res = await fetch("/api/favorites", { credentials: "include" });
-    if (!res.ok) return;
-    const data = (await res.json()) as { symbols: string[] };
-    setFavorites(data.symbols);
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  const on = favorites?.includes(key) ?? false;
-  const busy = favorites === null;
+  const on = symbols?.includes(key) ?? false;
+  const busy = symbols === null;
 
   const toggle = async () => {
     const res = await fetch("/api/favorites", {
@@ -36,7 +25,7 @@ export function FavoriteButton({ symbol, className, compact }: Props) {
     });
     if (!res.ok) return;
     const data = (await res.json()) as { symbols: string[] };
-    setFavorites(data.symbols);
+    replaceSymbols(data.symbols);
   };
 
   return (
