@@ -55,11 +55,11 @@ export function yahooChartParams(
     case "1d":
       return { interval: "1d", range: "5y" };
     case "1wk":
-      return { interval: "1wk", range: "max" };
+      return { interval: "1wk", range: "2y" };
     case "1mo":
-      return { interval: "1mo", range: "max" };
+      return { interval: "1mo", range: "5y" };
     case "3mo":
-      return { interval: "3mo", range: "max" };
+      return { interval: "3mo", range: "10y" };
     default:
       return { interval: "1d", range: "5y" };
   }

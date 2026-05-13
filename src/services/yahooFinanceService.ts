@@ -147,7 +147,9 @@ export async function fetchYahooCandles(
       revalidate:
         timeframe === "1m"
           ? 30
-          : timeframe === "1mo" || timeframe === "3mo"
+          : timeframe === "1wk" ||
+              timeframe === "1mo" ||
+              timeframe === "3mo"
             ? 3600
             : 120,
     },

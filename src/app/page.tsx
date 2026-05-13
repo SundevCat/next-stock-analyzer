@@ -53,7 +53,7 @@ export default function HomePage() {
           },
           {
             title: "Timeframes",
-            body: "1m through weekly candles with sensible Yahoo ranges plus aggregated 4h bars.",
+            body: "1m through weekly / monthly / quarterly candles with Yahoo-aligned ranges plus aggregated 4h bars.",
           },
           {
             title: "Favourites",
