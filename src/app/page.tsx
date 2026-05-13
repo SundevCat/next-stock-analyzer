@@ -42,6 +42,18 @@ export default function HomePage() {
           >
             Favourites Thailand
           </Link>
+          <Link
+            href="/stocks/extras"
+            className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+          >
+            Indices & FX
+          </Link>
+          <Link
+            href="/dashboard/extras"
+            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:border-slate-500"
+          >
+            Favourites funds/gold
+          </Link>
         </div>
       </section>
 

@@ -1,7 +1,11 @@
-import { toDisplaySymbol, toTradingSymbol } from "@/lib/symbolCodec";
-import type { MarketId } from "@/lib/marketKind";
+import {
+  extrasNameForTradingSymbol,
+  isExtrasSymbol,
+} from "@/data/extrasUniverse";
 import { marketOfSymbol } from "@/lib/marketKind";
+import type { MarketId } from "@/lib/marketKind";
 import { listFavorites } from "@/repositories/favoritesRepository";
+import { toDisplaySymbol, toTradingSymbol } from "@/lib/symbolCodec";
 import { enrichStockListRows } from "@/services/stockListEnrichmentService";
 import { getAllMarketSymbols } from "@/services/marketUniverseService";
 import type { StockListItem, StockSymbol } from "@/types/stock";
@@ -13,7 +17,11 @@ export async function getEnrichedFavoriteStocks(
 ): Promise<StockListItem[]> {
   let symbols = await listFavorites(sessionId);
   if (market) {
-    symbols = symbols.filter((s) => marketOfSymbol(s) === market);
+    if (market === "extras") {
+      symbols = symbols.filter((s) => isExtrasSymbol(s));
+    } else {
+      symbols = symbols.filter((s) => marketOfSymbol(s) === market);
+    }
   }
   if (symbols.length === 0) return [];
 
@@ -23,7 +31,10 @@ export async function getEnrichedFavoriteStocks(
   );
   const stockRows: StockSymbol[] = symbols.map((sym) => ({
     symbol: sym,
-    name: nameByTrading.get(sym) ?? toDisplaySymbol(sym),
+    name:
+      nameByTrading.get(sym) ??
+      extrasNameForTradingSymbol(sym) ??
+      toDisplaySymbol(sym),
   }));
   return enrichStockListRows(stockRows);
 }

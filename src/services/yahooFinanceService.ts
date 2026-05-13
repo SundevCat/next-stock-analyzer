@@ -5,6 +5,39 @@ import { toTradingSymbol } from "@/lib/symbolCodec";
 const YAHOO_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+const METAL_PAIR_CHART_PROXY: Record<
+  string,
+  { fetchAs: string; companyNameFallback: string }
+> = {
+  "XAUUSD=X": {
+    fetchAs: "GC=F",
+    companyNameFallback:
+      "Gold / USD · chart uses COMEX GC=F (Yahoo chart API has no XAUUSD=X candles)",
+  },
+  "XAGUSD=X": {
+    fetchAs: "SI=F",
+    companyNameFallback:
+      "Silver / USD · chart uses COMEX SI=F (Yahoo chart API has no XAGUSD=X candles)",
+  },
+};
+
+function chartFetchTicker(
+  requestedTradingSymbol: string
+): {
+  fetchTicker: string;
+  metaOverrideCompanyName: string | null;
+} {
+  const canonical = toTradingSymbol(requestedTradingSymbol);
+  const proxy = METAL_PAIR_CHART_PROXY[canonical];
+  if (!proxy) {
+    return { fetchTicker: canonical, metaOverrideCompanyName: null };
+  }
+  return {
+    fetchTicker: proxy.fetchAs,
+    metaOverrideCompanyName: proxy.companyNameFallback,
+  };
+}
+
 type YahooChartResult = {
   chart?: {
     result?: Array<{
@@ -122,10 +155,11 @@ export async function fetchYahooCandles(
   symbol: string,
   timeframe: TimeframeId
 ): Promise<{ candles: Candle[]; meta: YahooChartInstrumentMeta }> {
-  const sym = toTradingSymbol(symbol);
+  const { fetchTicker, metaOverrideCompanyName } =
+    chartFetchTicker(symbol);
 
   if (timeframe === "4h") {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1h&range=2y`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(fetchTicker)}?interval=1h&range=2y`;
     const res = await fetch(url, {
       headers: { "User-Agent": YAHOO_UA, Accept: "application/json" },
       next: { revalidate: 60 },
@@ -134,13 +168,20 @@ export async function fetchYahooCandles(
     const body = (await res.json()) as YahooChartResult;
     const err = body.chart?.error;
     if (err) throw new Error(err.description ?? "Yahoo chart error");
+    let meta = chartInstrumentMeta(body);
+    if (metaOverrideCompanyName) {
+      meta = {
+        ...meta,
+        companyName: metaOverrideCompanyName,
+      };
+    }
     const raw = toCandles(body.chart?.result ?? []);
     const candles = aggregateTo4h(raw);
-    return { candles, meta: chartInstrumentMeta(body) };
+    return { candles, meta };
   }
 
   const { interval, range } = yahooChartParams(timeframe);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(fetchTicker)}?interval=${interval}&range=${range}`;
   const res = await fetch(url, {
     headers: { "User-Agent": YAHOO_UA, Accept: "application/json" },
     next: {
@@ -158,8 +199,15 @@ export async function fetchYahooCandles(
   const body = (await res.json()) as YahooChartResult;
   const err = body.chart?.error;
   if (err) throw new Error(err.description ?? "Yahoo chart error");
+  let meta = chartInstrumentMeta(body);
+  if (metaOverrideCompanyName) {
+    meta = {
+      ...meta,
+      companyName: metaOverrideCompanyName,
+    };
+  }
   const candles = toCandles(body.chart?.result ?? []);
-  return { candles, meta: chartInstrumentMeta(body) };
+  return { candles, meta };
 }
 
 export async function yahooSearchSymbols(

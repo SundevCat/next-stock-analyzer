@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getExtrasUniverseSorted,
+  isExtrasSymbol,
+} from "@/data/extrasUniverse";
 import type { MarketId } from "@/lib/marketKind";
 import { marketOfSymbol } from "@/lib/marketKind";
 import { getAllMarketSymbols } from "@/services/marketUniverseService";
@@ -13,7 +17,10 @@ const SEARCH_MERGE_CAP = 2000;
 /** Max rows per page when searching (client may use lower; API caps here). */
 const SEARCH_PAGE_LIMIT_MAX = 60;
 
-function filterByMarket(rows: StockSymbol[], market: MarketId): StockSymbol[] {
+function filterCoreMarket(
+  rows: StockSymbol[],
+  market: "us" | "th"
+): StockSymbol[] {
   return rows.filter((r) => marketOfSymbol(r.symbol) === market);
 }
 
@@ -28,10 +35,15 @@ export async function GET(req: NextRequest) {
 
   const mp = searchParams.get("market");
   const market: MarketId | undefined =
-    mp === "us" || mp === "th" ? mp : undefined;
+    mp === "us" || mp === "th" || mp === "extras" ? mp : undefined;
 
-  const full = await getAllMarketSymbols();
-  const all = market ? filterByMarket(full, market) : full;
+  let all: StockSymbol[];
+  if (market === "extras") {
+    all = getExtrasUniverseSorted();
+  } else {
+    const full = await getAllMarketSymbols();
+    all = market ? filterCoreMarket(full, market) : full;
+  }
 
   if (q.length) {
     const ql = q.toLowerCase();
@@ -51,7 +63,11 @@ export async function GET(req: NextRequest) {
     const map = new Map<string, StockSymbol>();
     for (const s of fromYahoo) {
       const t = toTradingSymbol(s.symbol);
-      if (market && marketOfSymbol(t) !== market) continue;
+      if (market === "extras") {
+        if (!isExtrasSymbol(t)) continue;
+      } else if (market && marketOfSymbol(t) !== market) {
+        continue;
+      }
       map.set(t, { symbol: t, name: s.name });
     }
     for (const s of fromUniverse) {
@@ -62,7 +78,11 @@ export async function GET(req: NextRequest) {
     let stocks: StockSymbol[] = [...map.values()].sort((a, b) =>
       a.symbol.localeCompare(b.symbol)
     );
-    if (market) stocks = filterByMarket(stocks, market);
+    if (market === "extras") {
+      stocks = stocks.filter((s) => isExtrasSymbol(s.symbol));
+    } else if (market) {
+      stocks = filterCoreMarket(stocks, market);
+    }
 
     const fullMatchCount = stocks.length;
     stocks = stocks.slice(0, SEARCH_MERGE_CAP);

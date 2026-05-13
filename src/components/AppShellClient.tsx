@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import {
+  Suspense,
   useCallback,
   useEffect,
   useId,
@@ -10,9 +11,18 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { SidebarNav } from "@/components/SidebarNav";
+import { useSearchParams } from "next/navigation";
+import { SidebarNav, type SidebarNavProps } from "@/components/SidebarNav";
 
 const STORAGE_KEY = "stock-analyzer-sidebar-collapsed";
+
+type SidebarShellProps = Omit<SidebarNavProps, "detailMarketCue">;
+
+function SidebarNavWithMarketCue(props: SidebarShellProps) {
+  const searchParams = useSearchParams();
+  const detailMarketCue = searchParams.get("market");
+  return <SidebarNav {...props} detailMarketCue={detailMarketCue} />;
+}
 
 export function AppShellClient({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -157,11 +167,22 @@ export function AppShellClient({ children }: { children: ReactNode }) {
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <SidebarNav
-                variant="full"
-                onNavigate={closeMobile}
-                mobileDrawer
-              />
+              <Suspense
+                fallback={
+                  <SidebarNav
+                    variant="full"
+                    onNavigate={closeMobile}
+                    mobileDrawer
+                    detailMarketCue={null}
+                  />
+                }
+              >
+                <SidebarNavWithMarketCue
+                  variant="full"
+                  onNavigate={closeMobile}
+                  mobileDrawer
+                />
+              </Suspense>
             </div>
           </aside>
         </div>
@@ -174,11 +195,22 @@ export function AppShellClient({ children }: { children: ReactNode }) {
             desktopCollapsed ? "w-[76px] border-r" : "w-60 border-r",
           ].join(" ")}
         >
-          <SidebarNav
-            variant={desktopCollapsed ? "rail" : "full"}
-            onToggleCollapse={toggleDesktop}
-            desktopCollapsed={desktopCollapsed}
-          />
+          <Suspense
+            fallback={
+              <SidebarNav
+                variant={desktopCollapsed ? "rail" : "full"}
+                onToggleCollapse={toggleDesktop}
+                desktopCollapsed={desktopCollapsed}
+                detailMarketCue={null}
+              />
+            }
+          >
+            <SidebarNavWithMarketCue
+              variant={desktopCollapsed ? "rail" : "full"}
+              onToggleCollapse={toggleDesktop}
+              desktopCollapsed={desktopCollapsed}
+            />
+          </Suspense>
         </div>
 
         <div

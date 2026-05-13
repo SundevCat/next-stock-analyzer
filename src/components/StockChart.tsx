@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import type { UTCTimestamp } from "lightweight-charts";
+import { useEffect, useMemo, useRef } from "react";
+import type { IPriceLine, UTCTimestamp } from "lightweight-charts";
+import {
+  computeTradingRangeLevels,
+  computeTrendChannel,
+  formatChartPrice,
+} from "@/lib/chartRangeLevels";
 import { chartMarkerTextTh } from "@/lib/predictionLabels";
 import { timeframeBarSeconds } from "@/lib/timeframes";
 import type { Candle, PredictionResult, TimeframeId } from "@/types/stock";
@@ -14,6 +19,19 @@ type Props = {
 
 export function StockChart({ candles, prediction, timeframe }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const rangeLevels = useMemo(
+    () => computeTradingRangeLevels(candles),
+    [candles]
+  );
+
+  const trendChannel = useMemo(
+    () => computeTrendChannel(candles),
+    [candles]
+  );
+
+  const refClose =
+    candles.length > 0 ? candles[candles.length - 1]!.close : 0;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -68,6 +86,89 @@ export function StockChart({ candles, prediction, timeframe }: Props) {
       }));
 
       candleSeries.setData(chartData);
+
+      const srPriceLines: IPriceLine[] = [];
+      if (rangeLevels) {
+        srPriceLines.push(
+          candleSeries.createPriceLine({
+            price: rangeLevels.resistance,
+            color: "rgba(248, 113, 113, 0.92)",
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: "Resistance",
+          })
+        );
+        srPriceLines.push(
+          candleSeries.createPriceLine({
+            price: rangeLevels.support,
+            color: "rgba(52, 211, 153, 0.92)",
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: "Support",
+          })
+        );
+        srPriceLines.push(
+          candleSeries.createPriceLine({
+            price: rangeLevels.midpoint,
+            color: "rgba(148, 163, 184, 0.4)",
+            lineWidth: 1,
+            lineStyle: LineStyle.Dotted,
+            axisLabelVisible: false,
+            title: "",
+          })
+        );
+      }
+
+      const pivotUp =
+        trendChannel?.method === "pivot_parallel" &&
+        trendChannel.trend === "up";
+      const pivotDown =
+        trendChannel?.method === "pivot_parallel" &&
+        trendChannel.trend === "down";
+
+      const trendUpperSeries = chart.addSeries(LineSeries, {
+        color: "rgba(251, 191, 36, 0.9)",
+        lineWidth: 2,
+        lineStyle: pivotUp ? LineStyle.Dashed : LineStyle.Solid,
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+      const trendLowerSeries = chart.addSeries(LineSeries, {
+        color: "rgba(45, 212, 191, 0.88)",
+        lineWidth: 2,
+        lineStyle: pivotDown ? LineStyle.Dashed : LineStyle.Solid,
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+
+      if (trendChannel) {
+        const { upper, lower } = trendChannel;
+        trendUpperSeries.setData([
+          {
+            time: upper.timeStart as UTCTimestamp,
+            value: upper.priceStart,
+          },
+          {
+            time: upper.timeEnd as UTCTimestamp,
+            value: upper.priceEnd,
+          },
+        ]);
+        trendLowerSeries.setData([
+          {
+            time: lower.timeStart as UTCTimestamp,
+            value: lower.priceStart,
+          },
+          {
+            time: lower.timeEnd as UTCTimestamp,
+            value: lower.priceEnd,
+          },
+        ]);
+      } else {
+        trendUpperSeries.setData([]);
+        trendLowerSeries.setData([]);
+      }
 
       const forecastSeries = chart.addSeries(LineSeries, {
         color: "rgba(96, 165, 250, 0.85)",
@@ -142,6 +243,9 @@ export function StockChart({ candles, prediction, timeframe }: Props) {
 
       cleanupRef.fn = () => {
         ro.disconnect();
+        for (const pl of srPriceLines) {
+          candleSeries.removePriceLine(pl);
+        }
         chart.remove();
       };
     })();
@@ -150,12 +254,111 @@ export function StockChart({ candles, prediction, timeframe }: Props) {
       disposed = true;
       cleanupRef.fn?.();
     };
-  }, [candles, prediction, timeframe]);
+  }, [candles, prediction, timeframe, rangeLevels, trendChannel]);
+
+  const rangePctOfMid =
+    rangeLevels && rangeLevels.midpoint > 0
+      ? (
+          ((rangeLevels.resistance - rangeLevels.support) /
+            rangeLevels.midpoint) *
+          100
+        ).toFixed(2)
+      : null;
+
+  const upperTrendPct =
+    trendChannel && trendChannel.upper.priceStart > 0
+      ? (
+          ((trendChannel.upper.priceEnd - trendChannel.upper.priceStart) /
+            trendChannel.upper.priceStart) *
+          100
+        ).toFixed(2)
+      : null;
+  const lowerTrendPct =
+    trendChannel && trendChannel.lower.priceStart > 0
+      ? (
+          ((trendChannel.lower.priceEnd - trendChannel.lower.priceStart) /
+            trendChannel.lower.priceStart) *
+          100
+        ).toFixed(2)
+      : null;
+
+  const trendChannelBlurb =
+    trendChannel?.method === "pivot_parallel"
+      ? trendChannel.trend === "up"
+        ? "ขาขึ้น: เชื่อม 2 พีว็อทต่ำล่าสุดที่สูงขึ้น (higher lows) แล้วเลื่อนเส้นขนานให้ชิดยอดแท่ง; เส้นล่างทึบ / เส้นบนประ"
+        : trendChannel.trend === "down"
+          ? "ขาลง: เชื่อม 2 พีว็อทสูงล่าสุดที่ต่ำลง (lower highs) แล้วเลื่อนเส้นขนานชิดก้นแท่ง; เส้นบนทึบ / เส้นล่างประ"
+          : ""
+      : "สำรอง: ฟิตเส้นถดถอย (OLS) แยกบนลำดับ high และ low — ได้ 2 เส้นที่ไม่ผ่านการบังคับให้ขนาน";
 
   return (
-    <div
-      ref={containerRef}
-      className="h-[420px] w-full min-h-[320px] overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40"
-    />
+    <div className="space-y-0">
+      <div
+        ref={containerRef}
+        className="h-[420px] w-full min-h-[320px] overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40"
+      />
+      {rangeLevels && rangePctOfMid !== null ? (
+        <p className="mt-2 px-1 text-[11px] leading-snug text-slate-500 md:text-xs">
+          <span className="font-semibold text-slate-400">Trading range</span>{" "}
+          ({rangeLevels.barsUsed} bars): Support{" "}
+          <span className="font-mono text-emerald-400/90">
+            {formatChartPrice(Math.max(refClose, 1e-12), rangeLevels.support)}
+          </span>
+          {" · "}Resistance{" "}
+          <span className="font-mono text-red-300/90">
+            {formatChartPrice(Math.max(refClose, 1e-12), rangeLevels.resistance)}
+          </span>
+          {" · "}Mid{" "}
+          <span className="font-mono text-slate-400">
+            {formatChartPrice(Math.max(refClose, 1e-12), rangeLevels.midpoint)}
+          </span>
+          <span className="text-slate-600">
+            {" "}
+            (band ~{rangePctOfMid}% vs. mid; dotted line = range midpoint).
+          </span>
+        </p>
+      ) : null}
+      {trendChannel &&
+      upperTrendPct !== null &&
+      lowerTrendPct !== null ? (
+        <p className="mt-1 px-1 text-[11px] leading-snug text-slate-500 md:text-xs">
+          <span className="font-semibold text-slate-400">Trend channel</span>{" "}
+          ({trendChannel.barsUsed} bars ท้ายรอบสังเกต){". "}
+          <span className="text-slate-600">{trendChannelBlurb}</span>
+          {" "}
+          <span className="text-amber-300/90">Upper</span>{" "}
+          <span className="font-mono text-amber-200/80">
+            {formatChartPrice(
+              Math.max(refClose, 1e-12),
+              trendChannel.upper.priceStart
+            )}
+          </span>
+          {" → "}
+          <span className="font-mono text-amber-200/80">
+            {formatChartPrice(
+              Math.max(refClose, 1e-12),
+              trendChannel.upper.priceEnd
+            )}
+          </span>
+          <span className="text-slate-600"> (~{upperTrendPct}%)</span>
+          {" · "}
+          <span className="text-teal-300/90">Lower</span>{" "}
+          <span className="font-mono text-teal-200/80">
+            {formatChartPrice(
+              Math.max(refClose, 1e-12),
+              trendChannel.lower.priceStart
+            )}
+          </span>
+          {" → "}
+          <span className="font-mono text-teal-200/80">
+            {formatChartPrice(
+              Math.max(refClose, 1e-12),
+              trendChannel.lower.priceEnd
+            )}
+          </span>
+          <span className="text-slate-600"> (~{lowerTrendPct}%)</span>
+        </p>
+      ) : null}
+    </div>
   );
 }

@@ -3,6 +3,7 @@
 import {
   ChevronLeft,
   ChevronRight,
+  Coins,
   Globe2,
   Home,
   LayoutGrid,
@@ -13,7 +14,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useMemo } from "react";
-import type { MarketId } from "@/lib/marketKind";
 import { marketOfSymbol } from "@/lib/marketKind";
 
 export type SidebarNavVariant = "full" | "rail";
@@ -27,6 +27,8 @@ export type SidebarNavProps = {
   /** Desktop only: toggle between full and rail. */
   onToggleCollapse?: () => void;
   desktopCollapsed?: boolean;
+  /** `market` query from chart URLs — highlights “Indices & FX” when extras. */
+  detailMarketCue?: string | null;
 };
 
 function navRowClass(active: boolean, rail: boolean) {
@@ -83,20 +85,32 @@ export function SidebarNav({
   mobileDrawer = false,
   onToggleCollapse,
   desktopCollapsed = false,
+  detailMarketCue = null,
 }: SidebarNavProps) {
   const rail = variant === "rail";
   const pathname = usePathname();
+  const cue = detailMarketCue;
 
-  const detailMarket: MarketId | null = useMemo(() => {
+  const detailCoreMarket = useMemo(() => {
     const m = pathname.match(/^\/stocks\/([^/]+)$/);
     if (!m) return null;
     const seg = decodeURIComponent(m[1]);
-    if (seg === "us" || seg === "th") return null;
+    if (seg === "us" || seg === "th" || seg === "extras") return null;
     return marketOfSymbol(seg);
   }, [pathname]);
 
   const is = (prefix: string) =>
     pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+  const usSidebarActive =
+    is("/stocks/us") ||
+    (detailCoreMarket === "us" && cue !== "extras");
+
+  const thSidebarActive =
+    is("/stocks/th") ||
+    (detailCoreMarket === "th" && cue !== "extras");
+
+  const extrasSidebarActive = is("/stocks/extras") || cue === "extras";
 
   const NavLink = ({
     href,
@@ -178,17 +192,12 @@ export function SidebarNav({
         >
           <NavLink
             href="/stocks/us"
-            active={is("/stocks/us") || detailMarket === "us"}
-            className={navRowClass(
-              is("/stocks/us") || detailMarket === "us",
-              rail
-            )}
+            active={usSidebarActive}
+            className={navRowClass(usSidebarActive, rail)}
             title="United States — SEC list and search"
           >
             <Globe2
-              className={navIconClass(
-                is("/stocks/us") || detailMarket === "us"
-              )}
+              className={navIconClass(usSidebarActive)}
               aria-hidden
             />
             {!rail ? (
@@ -206,17 +215,12 @@ export function SidebarNav({
           </NavLink>
           <NavLink
             href="/stocks/th"
-            active={is("/stocks/th") || detailMarket === "th"}
-            className={navRowClass(
-              is("/stocks/th") || detailMarket === "th",
-              rail
-            )}
+            active={thSidebarActive}
+            className={navRowClass(thSidebarActive, rail)}
             title="Thailand — SET / mai (Yahoo)"
           >
             <MapPin
-              className={navIconClass(
-                is("/stocks/th") || detailMarket === "th"
-              )}
+              className={navIconClass(thSidebarActive)}
               aria-hidden
             />
             {!rail ? (
@@ -229,6 +233,29 @@ export function SidebarNav({
             ) : (
               <span className="sr-only">
                 Thailand markets, SET and mai on Yahoo
+              </span>
+            )}
+          </NavLink>
+          <NavLink
+            href="/stocks/extras"
+            active={extrasSidebarActive}
+            className={navRowClass(extrasSidebarActive, rail)}
+            title="Indices, forex, ETFs & commodities (Yahoo)"
+          >
+            <Coins
+              className={navIconClass(extrasSidebarActive)}
+              aria-hidden
+            />
+            {!rail ? (
+              <span className="flex min-w-0 flex-col">
+                <span>Indices & FX</span>
+                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                  ETFs · gold · funds
+                </span>
+              </span>
+            ) : (
+              <span className="sr-only">
+                Indices, forex, ETFs, and commodities — Yahoo whitelist
               </span>
             )}
           </NavLink>
@@ -291,6 +318,29 @@ export function SidebarNav({
               </span>
             ) : (
               <span className="sr-only">Thailand favourites, saved tickers</span>
+            )}
+          </NavLink>
+          <NavLink
+            href="/dashboard/extras"
+            active={is("/dashboard/extras")}
+            className={navRowClass(is("/dashboard/extras"), rail)}
+            title="Favourites — funds &amp; commodities"
+          >
+            <Star
+              className={navIconClass(is("/dashboard/extras"))}
+              aria-hidden
+            />
+            {!rail ? (
+              <span className="flex min-w-0 flex-col">
+                <span>Funds / gold</span>
+                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                  Saved ETFs &amp; gold
+                </span>
+              </span>
+            ) : (
+              <span className="sr-only">
+                Favourite funds ETFs and commodities
+              </span>
             )}
           </NavLink>
         </div>

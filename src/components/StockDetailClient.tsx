@@ -37,7 +37,9 @@ export function StockDetailClient({ symbol }: Props) {
     [tradingSymbol]
   );
   const effectiveMarket: MarketId =
-    marketParam === "us" || marketParam === "th"
+    marketParam === "us" ||
+    marketParam === "th" ||
+    marketParam === "extras"
       ? marketParam
       : inferredMarket;
 

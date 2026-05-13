@@ -87,37 +87,15 @@ export function StockMarketBrowser({ market }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
-              market === "th"
-                ? "e.g. PTT or Thai stock name"
-                : "e.g. AAPL or Apple"
+              market === "extras"
+                ? "e.g. GSPC, XAUUSD, EURUSD"
+                : market === "th"
+                  ? "e.g. PTT or Thai stock name"
+                  : "e.g. AAPL or Apple"
             }
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-emerald-500/0 transition focus:ring-2 focus:ring-emerald-500/40"
           />
         </div>
-        {!searching && total != null && (
-          <p className="text-sm text-slate-400">
-            Recommended stocks:{" "}
-            <span className="font-mono text-slate-200">
-              {BROWSE_PAGE_SIZE.toLocaleString()}
-            </span>{" "}
-            <span className="text-slate-500">
-              (
-              {market === "th"
-                ? "Thailand — starter list"
-                : "United States — starter list"}
-              )
-            </span>
-          </p>
-        )}
-        {searching && totalMatched != null && (
-          <p className="text-sm text-slate-400">
-            Recommended stocks:{" "}
-            <span className="font-mono text-slate-200">
-              {totalMatched.toLocaleString()}
-            </span>{" "}
-            <span className="text-slate-500">(search matches)</span>
-          </p>
-        )}
       </div>
 
       {searching && enrichCapped && (

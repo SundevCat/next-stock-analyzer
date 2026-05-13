@@ -38,11 +38,16 @@ export function toTradingSymbol(raw: string): string {
 
 /**
  * Human-readable ticker for UI and public JSON `symbol` fields.
- * Examples: ^SPX → SPX; PTT.BK (Yahoo SET) → PTT.
+ * Drops Yahoo index caret (^), trims `.BK`, and hides Yahoo suffix segments
+ * after the first "=" (e.g. XAUUSD=X → XAUUSD, GC=F → GC).
  */
 export function toDisplaySymbol(raw: string): string {
   const t = toTradingSymbol(raw);
   let display = t.startsWith("^") ? t.slice(1) : t;
+  const eq = display.indexOf("=");
+  if (eq !== -1) {
+    display = display.slice(0, eq);
+  }
   if (display.endsWith(".BK")) {
     display = display.slice(0, -3);
   }
