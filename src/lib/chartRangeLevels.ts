@@ -29,6 +29,17 @@ export type TrendLineSegment = {
   priceEnd: number;
 };
 
+export type ChannelBreak = {
+  /** "breakout" = close above upper; "breakdown" = close below lower. */
+  type: "breakout" | "breakdown";
+  /** The crossed line's value at the breaking bar. */
+  linePrice: number;
+  /** The bar's close that crossed it. */
+  closePrice: number;
+  /** Bar time (UNIX seconds, matches Candle.time). */
+  time: number;
+};
+
 /**
  * Parallel channel in the trailing window:
  * - Prefer **pivot + parallel** (classic TA): connect last 2 swing lows (up) or highs (down), then offset a parallel to hug the opposite side.
@@ -41,7 +52,36 @@ export type TrendChannel = {
   method: "pivot_parallel" | "ols_envelope";
   /** Set when `method === "pivot_parallel"`. */
   trend?: "up" | "down";
+  /** Most recently closed bar broke the channel by close-beyond-line. null = no break. */
+  lastBreak: ChannelBreak | null;
 };
+
+function detectChannelBreak(
+  slice: Candle[],
+  upper: TrendLineSegment,
+  lower: TrendLineSegment
+): ChannelBreak | null {
+  const last = slice[slice.length - 1];
+  if (!last) return null;
+  const c = last.close;
+  if (c > upper.priceEnd) {
+    return {
+      type: "breakout",
+      linePrice: upper.priceEnd,
+      closePrice: c,
+      time: last.time,
+    };
+  }
+  if (c < lower.priceEnd) {
+    return {
+      type: "breakdown",
+      linePrice: lower.priceEnd,
+      closePrice: c,
+      time: last.time,
+    };
+  }
+  return null;
+}
 
 const PIVOT_RADIUS_DEFAULT = 2; // 5-bar fractal
 const PIVOT_RADIUS_FALLBACK = 1;
@@ -89,7 +129,9 @@ function evalPivotLine(x0: number, y0: number, x1: number, y1: number, x: number
   return y0 + m * (x - x0);
 }
 
-function buildPivotParallelChannel(slice: Candle[]): Omit<TrendChannel, "barsUsed"> | null {
+function buildPivotParallelChannel(
+  slice: Candle[]
+): Omit<TrendChannel, "barsUsed" | "lastBreak"> | null {
   let lowIdx = collectSwingLowIndices(slice, PIVOT_RADIUS_DEFAULT);
   let highIdx = collectSwingHighIndices(slice, PIVOT_RADIUS_DEFAULT);
   if (lowIdx.length < 2) lowIdx = collectSwingLowIndices(slice, PIVOT_RADIUS_FALLBACK);
@@ -220,7 +262,11 @@ export function computeTrendChannel(candles: Candle[]): TrendChannel | null {
 
   const pivot = buildPivotParallelChannel(slice);
   if (pivot) {
-    return { barsUsed: w, ...pivot };
+    return {
+      barsUsed: w,
+      ...pivot,
+      lastBreak: detectChannelBreak(slice, pivot.upper, pivot.lower),
+    };
   }
 
   const hi = olsRegressionEndpoints(slice, (c) => c.high);
@@ -228,21 +274,24 @@ export function computeTrendChannel(candles: Candle[]): TrendChannel | null {
   if (!hi || !lo) return null;
   const t0 = slice[0]!.time;
   const t1 = slice[slice.length - 1]!.time;
+  const upper: TrendLineSegment = {
+    timeStart: t0,
+    priceStart: hi.p0,
+    timeEnd: t1,
+    priceEnd: hi.p1,
+  };
+  const lower: TrendLineSegment = {
+    timeStart: t0,
+    priceStart: lo.p0,
+    timeEnd: t1,
+    priceEnd: lo.p1,
+  };
   return {
     barsUsed: w,
     method: "ols_envelope",
-    upper: {
-      timeStart: t0,
-      priceStart: hi.p0,
-      timeEnd: t1,
-      priceEnd: hi.p1,
-    },
-    lower: {
-      timeStart: t0,
-      priceStart: lo.p0,
-      timeEnd: t1,
-      priceEnd: lo.p1,
-    },
+    upper,
+    lower,
+    lastBreak: detectChannelBreak(slice, upper, lower),
   };
 }
 

@@ -35,7 +35,7 @@ export function FavoriteButton({ symbol, className, compact }: Props) {
       onClick={() => void toggle()}
       className={
         className ??
-        "rounded-lg border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:border-amber-400/60 hover:text-amber-200 disabled:opacity-50"
+        "inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/60 hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-50"
       }
     >
       {busy ? (
@@ -52,7 +52,7 @@ export function FavoriteButton({ symbol, className, compact }: Props) {
         "☆ Add favourite"
       )}
       {!busy && !compact && (
-        <span className="ml-2 text-xs text-slate-500">
+        <span className="ml-2 text-xs text-slate-400">
           {on ? "saved" : "track on dashboard"}
         </span>
       )}

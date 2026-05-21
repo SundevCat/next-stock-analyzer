@@ -1,4 +1,5 @@
 import type { Candle, PredictionResult, PredictionHorizon } from "@/types/stock";
+import { detectCandlePatterns } from "@/lib/chartPatterns";
 
 function emaSeries(values: number[], period: number): number[] {
   if (values.length === 0) return [];
@@ -15,18 +16,28 @@ function emaSeries(values: number[], period: number): number[] {
 
 function rsiLast(closes: number[], period = 14): number | null {
   if (closes.length <= period) return null;
-  let gains = 0;
-  let losses = 0;
-  for (let i = closes.length - period; i < closes.length; i++) {
+
+  let avgGain = 0;
+  let avgLoss = 0;
+  for (let i = 1; i <= period; i++) {
     const ch = closes[i]! - closes[i - 1]!;
-    if (ch >= 0) gains += ch;
-    else losses -= ch;
+    if (ch >= 0) avgGain += ch;
+    else avgLoss -= ch;
   }
-  const avgG = gains / period;
-  const avgL = losses / period;
-  if (avgL === 0 && avgG === 0) return 50;
-  if (avgL === 0) return 100;
-  const rs = avgG / avgL;
+  avgGain /= period;
+  avgLoss /= period;
+
+  for (let i = period + 1; i < closes.length; i++) {
+    const ch = closes[i]! - closes[i - 1]!;
+    const gain = ch > 0 ? ch : 0;
+    const loss = ch < 0 ? -ch : 0;
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+  }
+
+  if (avgLoss === 0 && avgGain === 0) return 50;
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
   return 100 - 100 / (1 + rs);
 }
 
@@ -62,6 +73,7 @@ export function predictFromCandles(candles: Candle[]): PredictionResult {
       rationale: ["Not enough history to score momentum indicators."],
       horizon1to10: [],
       metrics: { rsi14: null, ema12: null, ema26: null, lastClose },
+      patterns: [],
     };
   }
 
@@ -111,11 +123,55 @@ export function predictFromCandles(candles: Candle[]): PredictionResult {
     rationale.push("Recent linear regression on closes slopes downward.");
   }
 
+  const patterns = detectCandlePatterns(candles, 30);
+  const lastBarTime = candles.at(-1)?.time;
+  const penultTime = candles.at(-2)?.time;
+  const latest = patterns.length > 0 ? patterns[patterns.length - 1]! : null;
+  /**
+   * Freshness gate: only score a pattern that completed on the last or penultimate bar.
+   * Engulfing technically completes on bar n but represents a 2-bar event starting at n-1,
+   * so either timestamp counts. Older patterns stay in the returned list for chart markers
+   * but do not bias the current bullish/bearish summary.
+   */
+  const isFresh =
+    latest != null &&
+    (latest.time === lastBarTime || latest.time === penultTime);
+
+  let confidenceMultiplier = 1;
+  if (isFresh && latest) {
+    switch (latest.kind) {
+      case "bullish_engulfing":
+        score += 0.6;
+        rationale.push("Bullish engulfing on the latest bars.");
+        break;
+      case "bearish_engulfing":
+        score -= 0.6;
+        rationale.push("Bearish engulfing on the latest bars.");
+        break;
+      case "hammer":
+        score += 0.4;
+        rationale.push("Hammer after a down move (bullish reversal hint).");
+        break;
+      case "shooting_star":
+        score -= 0.4;
+        rationale.push("Shooting star after an up move (bearish reversal hint).");
+        break;
+      case "doji":
+        confidenceMultiplier = 0.75;
+        rationale.push("Doji on the latest bar — indecision; confidence trimmed.");
+        break;
+    }
+  }
+
   let summary: PredictionResult["summary"] = "neutral";
   if (score > 0.35) summary = "bullish";
   else if (score < -0.35) summary = "bearish";
 
-  const confidence = clamp(Math.abs(score) / 2.25, 0.15, 0.92);
+  const confidence = clamp(
+    (Math.abs(score) / 3.0) * confidenceMultiplier,
+    0.15,
+    0.92
+  );
 
   const horizon1to10: PredictionHorizon[] = [];
   const recentVol =
@@ -128,13 +184,7 @@ export function predictFromCandles(candles: Candle[]): PredictionResult {
   for (let step = 1; step <= 10; step++) {
     const decay = 1 / (1 + step * 0.08);
     const volBoost = 1 + Math.min(recentVol * 50, 0.4);
-    const rsiPhase = rsi14 != null ? (rsi14 / 55) * 0.08 : 0;
-    /** Small per-step ripple so horizons are not a flat “all down” / “all up” strip on every timeframe */
-    const ripple =
-      Math.sin(step * 1.06 + rsiPhase * 23) *
-      (0.1 + 0.13 * confidence) *
-      Math.min(volBoost, 1.2);
-    const impulse = baseSign * confidence * decay * volBoost + ripple;
+    const impulse = baseSign * confidence * decay * volBoost;
     let direction: PredictionHorizon["direction"] = "neutral";
     if (impulse > 0.12) direction = "up";
     else if (impulse < -0.12) direction = "down";
@@ -156,5 +206,6 @@ export function predictFromCandles(candles: Candle[]): PredictionResult {
       ema26,
       lastClose,
     },
+    patterns,
   };
 }

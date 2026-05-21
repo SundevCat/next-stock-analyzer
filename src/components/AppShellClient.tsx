@@ -117,7 +117,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
           aria-expanded={mobileOpen}
           aria-controls="site-navigation"
           onClick={() => setMobileOpen(true)}
-          className="inline-flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+          className="inline-flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
         >
           <Menu className="h-5 w-5" strokeWidth={2} aria-hidden />
           <span className="sr-only">Open navigation menu</span>
@@ -160,7 +160,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                 ref={closeButtonRef}
                 type="button"
                 onClick={closeMobile}
-                className="inline-flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 transition hover:border-slate-500 hover:bg-slate-800"
+                className="inline-flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 transition hover:border-slate-500 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 aria-label="Close navigation menu"
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -224,7 +224,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-400">
         Educational demo — not investment advice. Data from Yahoo Finance &amp;
         SEC.
       </footer>

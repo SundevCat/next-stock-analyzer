@@ -9,7 +9,27 @@ import {
 } from "@/lib/chartRangeLevels";
 import { chartMarkerTextTh } from "@/lib/predictionLabels";
 import { timeframeBarSeconds } from "@/lib/timeframes";
-import type { Candle, PredictionResult, TimeframeId } from "@/types/stock";
+import type {
+  Candle,
+  DetectedPattern,
+  PredictionResult,
+  TimeframeId,
+} from "@/types/stock";
+
+function patternShortLabel(kind: DetectedPattern["kind"]): string {
+  switch (kind) {
+    case "bullish_engulfing":
+      return "Engulf↑";
+    case "bearish_engulfing":
+      return "Engulf↓";
+    case "hammer":
+      return "Hammer";
+    case "shooting_star":
+      return "Star";
+    case "doji":
+      return "Doji";
+  }
+}
 
 type Props = {
   candles: Candle[];
@@ -212,24 +232,55 @@ export function StockChart({ candles, prediction, timeframe }: Props) {
       }
 
       const markerPlugin = createSeriesMarkers(candleSeries, []);
+      const markers: Parameters<typeof markerPlugin.setMarkers>[0] = [];
       if (last && prediction) {
         const isBull = prediction.summary === "bullish";
         const isBear = prediction.summary === "bearish";
         const shape = isBull ? "arrowUp" : isBear ? "arrowDown" : "circle";
         const color = isBull ? "#34d399" : isBear ? "#f87171" : "#facc15";
         const label = chartMarkerTextTh(prediction.summary);
-        markerPlugin.setMarkers([
-          {
-            time: last.time as UTCTimestamp,
-            position: isBear ? "aboveBar" : "belowBar",
-            color,
-            shape,
-            text: label,
-          },
-        ]);
-      } else {
-        markerPlugin.setMarkers([]);
+        markers.push({
+          time: last.time as UTCTimestamp,
+          position: isBear ? "aboveBar" : "belowBar",
+          color,
+          shape,
+          text: label,
+        });
       }
+      if (trendChannel?.lastBreak) {
+        const b = trendChannel.lastBreak;
+        markers.push({
+          time: b.time as UTCTimestamp,
+          position: b.type === "breakout" ? "aboveBar" : "belowBar",
+          color: b.type === "breakout" ? "#fbbf24" : "#fb7185",
+          shape: b.type === "breakout" ? "arrowUp" : "arrowDown",
+          text: b.type === "breakout" ? "เบรกขึ้น" : "เบรกลง",
+        });
+      }
+      if (prediction?.patterns?.length) {
+        /** Show only the most recent patterns so short timeframes do not get peppered with doji circles. */
+        const visiblePatterns = prediction.patterns.slice(-10);
+        for (const p of visiblePatterns) {
+          markers.push({
+            time: p.time as UTCTimestamp,
+            position: p.bias === "bearish" ? "aboveBar" : "belowBar",
+            color:
+              p.bias === "bullish"
+                ? "#34d399"
+                : p.bias === "bearish"
+                  ? "#f87171"
+                  : "#fbbf24",
+            shape:
+              p.kind === "doji"
+                ? "circle"
+                : p.bias === "bullish"
+                  ? "arrowUp"
+                  : "arrowDown",
+            text: patternShortLabel(p.kind),
+          });
+        }
+      }
+      markerPlugin.setMarkers(markers);
 
       chart.timeScale().fitContent();
 
@@ -357,6 +408,38 @@ export function StockChart({ candles, prediction, timeframe }: Props) {
             )}
           </span>
           <span className="text-slate-600"> (~{lowerTrendPct}%)</span>
+        </p>
+      ) : null}
+      {trendChannel?.lastBreak ? (
+        <p className="mt-1 px-1 text-[11px] leading-snug md:text-xs">
+          <span
+            className={
+              trendChannel.lastBreak.type === "breakout"
+                ? "font-semibold text-amber-300"
+                : "font-semibold text-rose-300"
+            }
+          >
+            {trendChannel.lastBreak.type === "breakout"
+              ? "⚠ Rule break: ราคาปิดทะลุเส้นบน"
+              : "⚠ Rule break: ราคาปิดทะลุเส้นล่าง"}
+          </span>{" "}
+          <span className="text-slate-400">
+            ปิดที่{" "}
+            <span className="font-mono">
+              {formatChartPrice(
+                Math.max(refClose, 1e-12),
+                trendChannel.lastBreak.closePrice
+              )}
+            </span>
+            {" vs. เส้น "}
+            <span className="font-mono">
+              {formatChartPrice(
+                Math.max(refClose, 1e-12),
+                trendChannel.lastBreak.linePrice
+              )}
+            </span>
+            {" — กฎกรอบเดิมถือว่าเสีย"}
+          </span>
         </p>
       ) : null}
     </div>

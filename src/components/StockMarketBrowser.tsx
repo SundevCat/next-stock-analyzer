@@ -80,10 +80,14 @@ export function StockMarketBrowser({ market }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-xl flex-1">
-          <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+          <label
+            htmlFor="market-search"
+            className="block text-xs font-medium uppercase tracking-wide text-slate-400"
+          >
             Search symbol or company
           </label>
           <input
+            id="market-search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
@@ -113,7 +117,7 @@ export function StockMarketBrowser({ market }: Props) {
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full min-w-0 text-left text-xs md:min-w-[36rem] md:text-sm">
-            <thead className="bg-slate-900/80 text-[10px] uppercase tracking-wide text-slate-500 md:text-xs">
+            <thead className="bg-slate-900/80 text-[11px] uppercase tracking-wide text-slate-400 md:text-xs">
               <tr>
                 <th className="px-2 py-2 font-medium md:px-4 md:py-3">
                   Symbol
@@ -145,12 +149,12 @@ export function StockMarketBrowser({ market }: Props) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-slate-800" aria-live="polite">
               {rows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-4 py-10 text-center text-slate-500"
+                    className="px-4 py-10 text-center text-slate-400"
                   >
                     No matches.
                   </td>
@@ -190,7 +194,7 @@ export function StockMarketBrowser({ market }: Props) {
                       <FavoriteButton
                         symbol={s.tradingSymbol}
                         compact
-                        className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-600 px-2 py-1 text-xs font-medium text-slate-200 transition hover:border-amber-400/60 hover:text-amber-200 disabled:opacity-50 md:min-h-0 md:min-w-0"
+                        className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-600 px-2 py-1 text-xs font-medium text-slate-200 transition hover:border-amber-400/60 hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-50 md:min-h-0 md:min-w-0"
                       />
                     </td>
                   </tr>
@@ -202,12 +206,12 @@ export function StockMarketBrowser({ market }: Props) {
       )}
 
       {total != null && pageTotal > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-400">
+        <div className="flex items-center justify-between text-sm text-slate-300">
           <button
             type="button"
             disabled={page <= 1 || loading}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 hover:border-slate-500 disabled:opacity-40"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-700 px-3 py-2 hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-40"
           >
             Previous
           </button>
@@ -219,7 +223,7 @@ export function StockMarketBrowser({ market }: Props) {
                 of {(totalMatched ?? 0).toLocaleString()}
               </>
             ) : (
-              <span className="text-slate-500">
+              <span className="text-slate-400">
                 {" "}
                 · {BROWSE_PAGE_SIZE.toLocaleString()} per page
               </span>
@@ -229,7 +233,7 @@ export function StockMarketBrowser({ market }: Props) {
             type="button"
             disabled={loading || page * limit >= pageTotal}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 hover:border-slate-500 disabled:opacity-40"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-700 px-3 py-2 hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-40"
           >
             Next
           </button>

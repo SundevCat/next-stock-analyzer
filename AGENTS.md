@@ -4,7 +4,7 @@
 
 ## สรุปโปรเจกต์
 
-แอปวิเคราะห์หุ้น (Next.js): รายชื่อหุ้น (SEC + Yahoo search), กราฟจาก Yahoo Finance, สัญญาณจากอินดิเคเตอร์ (EMA/RSI/regression) ผ่าน `predictFromCandles`, รายการโปรดที่ผูกกับ session
+แอปวิเคราะห์หุ้น (Next.js): รายชื่อหุ้น (SEC + Yahoo search), กราฟจาก Yahoo Finance, สัญญาณจากอินดิเคเตอร์ (EMA / **Wilder's RSI** / OLS regression) ผ่าน `predictFromCandles`, trend-channel + **rule-break (close-beyond-line) detection** ผ่าน `computeTrendChannel`, รายการโปรดที่ผูกกับ session
 
 ## Stack
 
@@ -30,6 +30,13 @@
 
 1. **อย่าทำลายพฤติกรรมเดิม**: กราฟ, การคำนวณ prediction, favourites, เลย์เอาต์ dashboard — ถ้าต้องเปลี่ยน API shape ให้ backward-compatible หรืออัปเดตผู้เรียกทุกจุด
 2. **แหล่งความจริงของ prediction**: ใช้ `predictFromCandles` จาก `predictionService.ts` เท่านั้นเมื่อต้องการ logic เดียวกับหน้า detail — ห้ามคัดลอกสูตรไปผูก UI โดยแยก logic
+   - RSI ใช้ **Wilder's smoothing** (`α = 1/period`) — ถ้าต้องอ้าง RSI ที่อื่น ให้ตรงกับสูตรนี้ (ห้ามกลับไปใช้ simple-average / Cutler's)
+   - `horizon1to10` ใช้ pure decayed signal — **ห้ามใส่ ripple/sine** กลับเข้าไปเพื่อให้กราฟไม่แบน; แถบที่ทิศเดียวกันทั้งแถวคือพฤติกรรมที่ถูกต้อง
+   - Trend channel: ใช้ `computeTrendChannel` จาก `lib/chartRangeLevels.ts` (pivot-parallel ก่อน, fallback เป็น OLS envelope); ผลลัพธ์มี `lastBreak: ChannelBreak | null` ตามกฎ **close-beyond-line** — อย่าเขียน detector ซ้ำ
+   - Candle patterns (Tier A): ใช้ `detectCandlePatterns` จาก `lib/chartPatterns.ts` — รองรับ bullish/bearish engulfing, hammer, shooting star, doji เท่านั้น; ห้ามเขียน detector ซ้ำใน UI หรือ service อื่น
+   - Type `DetectedPattern` / `CandlePatternKind` อยู่ที่ `types/stock.ts` (detector import กลับเข้าไป) — ห้ามย้าย type นี้ไป `chartPatterns.ts` (จะทำให้เกิด circular re-export)
+   - Score weights ปัจจุบัน: EMA cross ±1, RSI ±0.5/±0.25, slope ±0.75, pattern ±0.6/±0.4 (ล่าสุดที่บาร์ปัจจุบัน/ก่อนหน้าเท่านั้น), doji × 0.75 confidence — **confidence divisor = 3.0** (ถ้าเพิ่ม signal ใหม่ ต้อง re-calibrate divisor)
+   - Calibration: `DOJI_BODY_RATIO = 0.03`, engulfing ต้องมี previous body ≥ 10% ของ range ของบาร์นั้น; chart marker cap = 10 อันล่าสุดเท่านั้น
 3. **สัญลักษณ์หุ้น**: Route param และ Yahoo อาจมี `^` หรือรูปแบบ URL-encoded; การแสดงผล/API ควรผ่านฟังก์ชัน sanitize/decode กลาง (ถ้ามีใน `src/lib/`) ก่อน render และก่อนส่ง JSON
 4. **Caching**: `getAllSecSymbols` ใช้ `unstable_cache`; Yahoo fetch ใช้ `next: { revalidate: ... }` — พิจารณา TTL เมื่อเพิ่ม endpoint ใหม่
 5. **Universe รายการหุ้น**: ลิสต์หลักรวม US (SEC) + ไทย (`getAllMarketSymbols`); การค้นหายังดึง Yahoo search ได้
@@ -37,6 +44,14 @@
 7. **ขอบเขต diff**: แก้เฉพาะไฟล์ที่จำเป็นต่องาน ไม่ refactor ยกก้อนโดยไม่ขอ
 8. **ตรวจสอบก่อนจบงาน**: หลังแก้โค้ดให้รัน **`npm run lint`** และ **`npm run build`** จนกว่าจะผ่าน — ถือว่างานยังไม่จบถ้า build หรือ lint ล้มเหลว; แก้ error แล้วรันซ้ำจนกว่าจะ success
 9. **Git commits**: เมื่อผู้ใช้ขอให้ commit **ห้าม**ใส่ trailer `Co-authored-by: Cursor <cursoragent@cursor.com>` (หรือ co-author ของ agent แบบเดียวกัน) ยกเว้นผู้ใช้ระบุชัดว่าต้องการให้ใส่
+10. **Accessibility (WCAG 2.1 AA) baseline**: ห้าม downgrade ของพื้นฐานต่อไปนี้เมื่อแก้ UI
+    - Body / caption text ห้ามใช้ `text-slate-500` หรือ `text-slate-600` บนพื้น `bg-slate-950` / `bg-slate-900/30` — เริ่มที่ `text-slate-400` ขึ้นไปสำหรับเนื้อหา (slate-500 ใช้ได้เฉพาะ border / decorative)
+    - ปุ่ม / ลิงก์ interactive ต้องมี `focus-visible:ring-2 focus-visible:ring-{emerald|amber}-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950` (emerald สำหรับ general, amber สำหรับ favourite)
+    - Touch target ต้อง `min-h-11` (44 px) ขึ้นไปบน control หลัก
+    - `<label>` ต้องผูกกับ `<input>` ด้วย `htmlFor` + `id`
+    - Error banner ใช้ `role="alert"` + `aria-live="assertive"`; empty / status updates ใช้ `aria-live="polite"`
+    - Block ที่เนื้อหาเป็นภาษาไทย ให้ใส่ `lang="th"` (root `<html lang="en">` คงไว้สำหรับ chrome)
+    - Table `<thead>` อย่างต่ำ `text-[11px] text-slate-400`
 
 ## คำสั่งที่ใช้บ่อย
 

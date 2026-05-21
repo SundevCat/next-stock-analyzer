@@ -39,6 +39,20 @@ export type PredictionHorizon = {
   confidence: number;
 };
 
+export type CandlePatternKind =
+  | "bullish_engulfing"
+  | "bearish_engulfing"
+  | "hammer"
+  | "shooting_star"
+  | "doji";
+
+export type DetectedPattern = {
+  kind: CandlePatternKind;
+  /** UNIX seconds — matches Candle.time and lightweight-charts marker time. */
+  time: number;
+  bias: "bullish" | "bearish" | "neutral";
+};
+
 export type PredictionResult = {
   summary: "bullish" | "bearish" | "neutral";
   confidence: number;
@@ -50,4 +64,6 @@ export type PredictionResult = {
     ema26: number | null;
     lastClose: number | null;
   };
+  /** Tier-A candle patterns detected in the trailing 30 bars (chronological). */
+  patterns: DetectedPattern[];
 };

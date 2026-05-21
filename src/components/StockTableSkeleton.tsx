@@ -25,7 +25,7 @@ export function StockTableSkeleton({
     >
       <span className="sr-only">{label}</span>
       <table className="w-full min-w-0 text-left text-xs md:min-w-[36rem] md:text-sm">
-        <thead className="bg-slate-900/80 text-[10px] uppercase tracking-wide text-slate-500 md:text-xs">
+        <thead className="bg-slate-900/80 text-[11px] uppercase tracking-wide text-slate-400 md:text-xs">
           <tr>
             <th className="px-2 py-2 font-medium md:px-4 md:py-3">
               Symbol

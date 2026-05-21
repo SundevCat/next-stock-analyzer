@@ -33,13 +33,13 @@ export type SidebarNavProps = {
 
 function navRowClass(active: boolean, rail: boolean) {
   return [
-    "group flex items-center rounded-lg transition",
+    "group flex items-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
     rail
       ? "min-h-11 w-full justify-center px-2 py-2.5"
       : "gap-3 px-3 py-2.5",
     active
       ? "bg-slate-800 font-medium text-white shadow-sm ring-1 ring-white/5"
-      : "text-slate-400 hover:bg-slate-900 hover:text-slate-200",
+      : "text-slate-300 hover:bg-slate-900 hover:text-slate-200",
   ].join(" ");
 }
 
@@ -72,7 +72,7 @@ function SectionLabel({
   return (
     <div className="mb-2 mt-1 flex items-center gap-2 px-1">
       <Icon className={`h-3.5 w-3.5 ${iconClass}`} strokeWidth={2} aria-hidden />
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
         {children}
       </span>
     </div>
@@ -203,7 +203,7 @@ export function SidebarNav({
             {!rail ? (
               <span className="flex min-w-0 flex-col">
                 <span>United States</span>
-                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                <span className="truncate text-[11px] font-normal text-slate-400 group-hover:text-slate-300">
                   SEC list &amp; search
                 </span>
               </span>
@@ -226,7 +226,7 @@ export function SidebarNav({
             {!rail ? (
               <span className="flex min-w-0 flex-col">
                 <span>Thailand</span>
-                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                <span className="truncate text-[11px] font-normal text-slate-400 group-hover:text-slate-300">
                   SET / mai (Yahoo)
                 </span>
               </span>
@@ -249,7 +249,7 @@ export function SidebarNav({
             {!rail ? (
               <span className="flex min-w-0 flex-col">
                 <span>Indices & FX</span>
-                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                <span className="truncate text-[11px] font-normal text-slate-400 group-hover:text-slate-300">
                   ETFs · gold · funds
                 </span>
               </span>
@@ -289,7 +289,7 @@ export function SidebarNav({
             {!rail ? (
               <span className="flex min-w-0 flex-col">
                 <span>United States</span>
-                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                <span className="truncate text-[11px] font-normal text-slate-400 group-hover:text-slate-300">
                   Saved US tickers
                 </span>
               </span>
@@ -312,7 +312,7 @@ export function SidebarNav({
             {!rail ? (
               <span className="flex min-w-0 flex-col">
                 <span>Thailand</span>
-                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                <span className="truncate text-[11px] font-normal text-slate-400 group-hover:text-slate-300">
                   Saved TH tickers
                 </span>
               </span>
@@ -333,7 +333,7 @@ export function SidebarNav({
             {!rail ? (
               <span className="flex min-w-0 flex-col">
                 <span>Funds / gold</span>
-                <span className="truncate text-[11px] font-normal text-slate-500 group-hover:text-slate-400">
+                <span className="truncate text-[11px] font-normal text-slate-400 group-hover:text-slate-300">
                   Saved ETFs &amp; gold
                 </span>
               </span>
@@ -351,7 +351,7 @@ export function SidebarNav({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-900/50 px-2 text-xs font-medium text-slate-400 transition hover:border-slate-600 hover:text-slate-200"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-900/50 px-2 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             aria-label={
               desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"
             }

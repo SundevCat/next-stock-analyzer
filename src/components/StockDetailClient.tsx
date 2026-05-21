@@ -133,23 +133,23 @@ export function StockDetailClient({ symbol }: Props) {
             </p>
           )}
           {(exchangeName || currency || tradingSymbol !== displaySymbol) && (
-            <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
+            <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-300">
               {exchangeName && (
-                <div className="flex gap-2">
-                  <dt className="text-slate-600">ตลาด</dt>
-                  <dd className="text-slate-400">{exchangeName}</dd>
+                <div className="flex gap-2" lang="th">
+                  <dt className="text-slate-400">ตลาด</dt>
+                  <dd className="text-slate-200">{exchangeName}</dd>
                 </div>
               )}
               {currency && (
-                <div className="flex gap-2">
-                  <dt className="text-slate-600">สกุลเงิน</dt>
-                  <dd className="font-mono text-slate-400">{currency}</dd>
+                <div className="flex gap-2" lang="th">
+                  <dt className="text-slate-400">สกุลเงิน</dt>
+                  <dd className="font-mono text-slate-200">{currency}</dd>
                 </div>
               )}
               {tradingSymbol !== displaySymbol && (
-                <div className="flex gap-2">
-                  <dt className="text-slate-600">รหัสซื้อขาย</dt>
-                  <dd className="font-mono text-slate-400">{tradingSymbol}</dd>
+                <div className="flex gap-2" lang="th">
+                  <dt className="text-slate-400">รหัสซื้อขาย</dt>
+                  <dd className="font-mono text-slate-200">{tradingSymbol}</dd>
                 </div>
               )}
             </dl>
@@ -159,7 +159,7 @@ export function StockDetailClient({ symbol }: Props) {
           <FavoriteButton symbol={tradingSymbol} />
           <Link
             href={listHref}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:border-slate-500"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             {fromFavorites ? "Back to favourites" : "Back to list"}
           </Link>
@@ -172,10 +172,11 @@ export function StockDetailClient({ symbol }: Props) {
             key={t.id}
             type="button"
             onClick={() => setTimeframe(t.id)}
+            aria-pressed={timeframe === t.id}
             className={
               timeframe === t.id
-                ? "rounded-lg bg-emerald-500/20 px-3 py-1.5 text-sm font-medium text-emerald-300 ring-1 ring-emerald-500/50"
-                : "rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:border-slate-500"
+                ? "inline-flex min-h-11 items-center rounded-lg bg-emerald-500/20 px-3 py-2 text-sm font-medium text-emerald-200 ring-1 ring-emerald-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                : "inline-flex min-h-11 items-center rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             }
           >
             {t.label}
@@ -184,7 +185,11 @@ export function StockDetailClient({ symbol }: Props) {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-200"
+        >
           {error}
         </div>
       )}
@@ -204,19 +209,22 @@ export function StockDetailClient({ symbol }: Props) {
           />
 
           {prediction && (
-            <section className="grid gap-4 rounded-xl border border-slate-800 bg-slate-900/30 p-5 sm:grid-cols-2">
+            <section
+              lang="th"
+              className="grid gap-4 rounded-xl border border-slate-800 bg-slate-900/30 p-5 sm:grid-cols-2"
+            >
               <div>
                 <h2 className="text-sm font-semibold text-slate-200">
                   สัญญาณจากกราฟ
                 </h2>
                 <p className="mt-2 text-2xl font-semibold text-white">
                   {summaryHeadlineTh(prediction.summary)}{" "}
-                  <span className="text-base font-normal text-slate-400">
+                  <span className="text-base font-normal text-slate-300">
                     (โมเดลมั่นใจประมาณ {(prediction.confidence * 100).toFixed(0)}
                     %)
                   </span>
                 </p>
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-400">
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-300">
                   {prediction.rationale.map((r) => (
                     <li key={r}>{r}</li>
                   ))}
@@ -226,7 +234,7 @@ export function StockDetailClient({ symbol }: Props) {
                 <h2 className="text-sm font-semibold text-slate-200">
                   {horizonSectionTitleTh(timeframe)}
                 </h2>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
                   {horizonHelpTh(timeframe)}
                 </p>
                 <div className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3 sm:grid-cols-5">
@@ -238,33 +246,33 @@ export function StockDetailClient({ symbol }: Props) {
                           ? "bg-emerald-500/15 text-emerald-200"
                           : h.direction === "down"
                             ? "bg-red-500/15 text-red-200"
-                            : "bg-slate-700/40 text-slate-300"
+                            : "bg-slate-700/40 text-slate-200"
                       }`}
                     >
-                      <div className="font-mono text-[10px] text-slate-500">
+                      <div className="font-mono text-[11px] text-slate-300">
                         ช่วง {h.step}
                       </div>
                       <div className="mt-1 font-semibold">
                         {directionSimpleTh(h.direction)}
                       </div>
-                      <div className="mt-0.5 text-[10px] text-slate-500">
+                      <div className="mt-0.5 text-[11px] text-slate-300">
                         ~{(h.confidence * 100).toFixed(0)}%
                       </div>
                     </div>
                   ))}
                 </div>
-                <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-500">
-                  <dt>RSI(14)</dt>
-                  <dd className="font-mono text-slate-300">
+                <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-300">
+                  <dt className="text-slate-400">RSI(14)</dt>
+                  <dd className="font-mono text-slate-200">
                     {prediction.metrics.rsi14?.toFixed(1) ?? "—"}
                   </dd>
-                  <dt>EMA12 / EMA26</dt>
-                  <dd className="font-mono text-slate-300">
+                  <dt className="text-slate-400">EMA12 / EMA26</dt>
+                  <dd className="font-mono text-slate-200">
                     {prediction.metrics.ema12?.toFixed(2) ?? "—"} /{" "}
                     {prediction.metrics.ema26?.toFixed(2) ?? "—"}
                   </dd>
-                  <dt>ราคาปิดล่าสุด</dt>
-                  <dd className="font-mono text-slate-300">
+                  <dt className="text-slate-400">ราคาปิดล่าสุด</dt>
+                  <dd className="font-mono text-slate-200">
                     {prediction.metrics.lastClose?.toFixed(2) ?? "—"}
                   </dd>
                 </dl>
